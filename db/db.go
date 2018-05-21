@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"database/sql"
@@ -17,6 +17,14 @@ import (
 type PGDatabase struct {
 	url string
 	db  *sql.DB
+}
+
+// NewFromDB create new Database struct
+// databaseURL: postgres://localhost:5432/database?sslmode=enable
+func NewFromDB(db *sql.DB) (*PGDatabase, error) {
+	return &PGDatabase{
+		db: db,
+	}, nil
 }
 
 // New create new Databse struct
@@ -49,25 +57,26 @@ func (db *PGDatabase) Migrate() error {
 	return m.Steps(1)
 }
 
-// InsertUser insert a new twitter user into the database
-func (db *PGDatabase) InsertUser(user *model.User) error {
+// NewUser insert a new twitter user into the database
+func (db *PGDatabase) NewUser(user *model.User) error {
 	sqlStatement := `
 		INSERT INTO users
 		(
-			id
-		  url
-		  name
-		  screen_name
-		  location
-		  description
-		  background_image
-		  image
-		  favourite_count
-		  followers_count
-		  friends_count
+			id,
+		  url,
+		  name,
+		  screen_name,
+		  location,
+			lang,
+		  description,
+		  background_image,
+		  image,
+		  favourites_count,
+		  followers_count,
+		  friends_count,
 		  updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	`
 	stmt, err := db.db.Prepare(sqlStatement)
 	if err != nil {
@@ -94,25 +103,29 @@ func (db *PGDatabase) InsertUser(user *model.User) error {
 	return nil
 }
 
-func scanUser(row *sql.Row) (user *model.User, err error) {
+func scanUser(row *sql.Row) (*model.User, error) {
+	var err error
+	user := &model.User{}
 	err = row.Scan(
-		user.ID,
-		user.URL,
-		user.Name,
-		user.ScreenName,
-		user.Location,
-		user.Lang,
-		user.Description,
-		user.BackgroundImage,
-		user.Image,
-		user.FavouritesCount,
-		user.FollowersCount,
-		user.FriendsCount,
-		user.UpdatedAt,
+		&user.ID,
+		&user.URL,
+		&user.Name,
+		&user.ScreenName,
+		&user.Location,
+		&user.Lang,
+		&user.Description,
+		&user.BackgroundImage,
+		&user.Image,
+		&user.FavouritesCount,
+		&user.FollowersCount,
+		&user.FriendsCount,
+		&user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
+	// normalize time
+	user.UpdatedAt = user.UpdatedAt.UTC()
 	return user, err
 }
 
