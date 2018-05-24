@@ -1,14 +1,39 @@
 package twitter
 
 import (
+	"log"
 	"net/url"
+	"os"
+	"time"
 
+	"github.com/joho/godotenv"
+	"github.com/wipeinc/wipeinc/model"
 	"github.com/wow-sweetlie/anaconda"
 )
+
+const Timeout = 1 * time.Hour
 
 // Client Twitter API wrapper
 type Client struct {
 	API *anaconda.TwitterApi
+}
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	log.Print(os.Getenv("TWITTER_CONSUMER_KEY"))
+	anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
+	anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
+}
+
+func (c *Client) GetUser(screenName string) (*model.User, error) {
+	user, err := c.API.GetUsersShow(screenName, nil)
+	if err != nil {
+		return nil, err
+	}
+	return model.NewUser(user)
 }
 
 func (c *Client) BlockUserFollowers(screenName string) error {

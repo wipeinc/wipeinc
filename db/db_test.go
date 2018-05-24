@@ -65,9 +65,42 @@ func TestNewUser(t *testing.T) {
 		t.Fatalf("error on calling NewUser; %#v", err)
 	}
 
-	fetchUser, err := db.GetUser(123)
+	fetchUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatalf("error on calling NewUser; %#v", err)
+	}
+	if !reflect.DeepEqual(fetchUser, user) {
+		t.Errorf("expected \n%q", user)
+		t.Errorf("\ngot:\n%q", fetchUser)
+	}
+
+	user.Name = "UpdatedName"
+	user.Image = "UpdatedImage"
+	err = db.UpdateUser(user)
+	if err != nil {
+		t.Fatalf("error on calling UpdateUser; %#v", err)
+	}
+	fetchUser, err = db.GetUser(user.ID)
+	if err != nil {
+		t.Fatalf("error on calling GetUser; %#v", err)
+	}
+	if !reflect.DeepEqual(fetchUser, user) {
+		t.Errorf("expected \n%q", user)
+		t.Errorf("\ngot:\n%q", fetchUser)
+	}
+
+	fetchUser, err = db.GetUserByScreenName(user.ScreenName)
+	if err != nil {
+		t.Fatalf("error on calling GetUserByName; %#v", err)
+	}
+	if !reflect.DeepEqual(fetchUser, user) {
+		t.Errorf("expected \n%q", user)
+		t.Errorf("\ngot:\n%q", fetchUser)
+	}
+
+	fetchUser, err = db.GetUserByScreenName("does not exist")
+	if err != sql.ErrNoRows {
+		t.Fatalf("expected ErrNoRows got; %#v", err)
 	}
 	if !reflect.DeepEqual(fetchUser, user) {
 		t.Errorf("expected \n%q", user)

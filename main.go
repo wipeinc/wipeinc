@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/wipeinc/wipeinc/database"
+	"github.com/wipeinc/wipeinc/db"
+	"github.com/wipeinc/wipeinc/server"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	db, err := database.New(os.Getenv("DATABASE_URL"))
+	db, err := db.New(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,13 +23,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = db.Migrate()
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	// anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
-	// anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
+	server.Serve()
+
 	// client := twitter.NewClient(os.Getenv("TESTCLIENT_ACCESS_TOKEN"), os.Getenv("TESTCLIENT_ACCESS_TOKEN_SECRET"))
 	// err = client.BlockUserFollowers("E8Emma")
 	// if err != nil {

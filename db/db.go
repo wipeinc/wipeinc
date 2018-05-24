@@ -57,6 +57,49 @@ func (db *PGDatabase) Migrate() error {
 	return m.Steps(1)
 }
 
+// UpdateUser update every field of a  twitter user except ID
+func (db *PGDatabase) UpdateUser(user *model.User) error {
+	sqlStatement := `
+		UPDATE users SET
+		(
+		  url,
+		  name,
+		  screen_name,
+		  location,
+			lang,
+		  description,
+		  background_image,
+		  image,
+		  favourites_count,
+		  followers_count,
+		  friends_count,
+		  updated_at
+		) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+	stmt, err := db.db.Prepare(sqlStatement)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(
+		user.URL,
+		user.Name,
+		user.ScreenName,
+		user.Location,
+		user.Lang,
+		user.Description,
+		user.BackgroundImage,
+		user.Image,
+		user.FavouritesCount,
+		user.FollowersCount,
+		user.FriendsCount,
+		user.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // NewUser insert a new twitter user into the database
 func (db *PGDatabase) NewUser(user *model.User) error {
 	sqlStatement := `
@@ -127,6 +170,13 @@ func scanUser(row *sql.Row) (*model.User, error) {
 	// normalize time
 	user.UpdatedAt = user.UpdatedAt.UTC()
 	return user, err
+}
+
+// GetUserByScreenName serach user by scren_name from the database
+func (db *PGDatabase) GetUserByScreenName(screenName string) (*model.User, error) {
+	sqlStatement := `SELECT * from users WHERE screen_name = $1`
+	row := db.db.QueryRow(sqlStatement, screenName)
+	return scanUser(row)
 }
 
 // GetUser return twitter user from the database

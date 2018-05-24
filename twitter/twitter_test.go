@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/wipeinc/blockhate/twitter"
+	"github.com/wipeinc/wipeinc/twitter"
 	"github.com/wow-sweetlie/anaconda"
 )
 
