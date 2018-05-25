@@ -114,12 +114,15 @@ func (db *PGDatabase) NewUser(user *model.User) error {
 		  description,
 		  background_image,
 		  image,
+			banner,
+			statuses_count,
 		  favourites_count,
 		  followers_count,
 		  friends_count,
+			created_at,
 		  updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 	`
 	stmt, err := db.db.Prepare(sqlStatement)
 	if err != nil {
@@ -135,9 +138,12 @@ func (db *PGDatabase) NewUser(user *model.User) error {
 		user.Description,
 		user.BackgroundImage,
 		user.Image,
+		user.Banner,
+		user.StatusesCount,
 		user.FavouritesCount,
 		user.FollowersCount,
 		user.FriendsCount,
+		user.CreatedAt,
 		user.UpdatedAt,
 	)
 	if err != nil {
@@ -159,9 +165,12 @@ func scanUser(row *sql.Row) (*model.User, error) {
 		&user.Description,
 		&user.BackgroundImage,
 		&user.Image,
+		&user.Banner,
+		&user.StatusesCount,
 		&user.FavouritesCount,
 		&user.FollowersCount,
 		&user.FriendsCount,
+		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
 	if err != nil {
@@ -169,6 +178,7 @@ func scanUser(row *sql.Row) (*model.User, error) {
 	}
 	// normalize time
 	user.UpdatedAt = user.UpdatedAt.UTC()
+	user.CreatedAt = user.CreatedAt.UTC()
 	return user, err
 }
 

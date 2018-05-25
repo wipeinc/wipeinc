@@ -7,9 +7,12 @@ const Img = styled.img`
   overflow: hidden;
 `;
 
-const Avatar = ({ url, size }) => (
-  <Img src={url} width={size} height={size} alt="avatar" />
-);
+const Avatar = ({ url, size }) => {
+  const biggerURL = url.replace('normal', 'bigger');
+  return (
+    <Img src={biggerURL} width={size} height={size} alt="avatar" />
+  );
+};
 
 Avatar.propTypes = {
   url: PropTypes.string.isRequired,

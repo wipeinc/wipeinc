@@ -54,6 +54,7 @@ func TestNewUser(t *testing.T) {
 		FavouritesCount: 1,
 		FollowersCount:  1,
 		FriendsCount:    1,
+		CreatedAt:       time.Now().Round(time.Microsecond).UTC(),
 		UpdatedAt:       time.Now().Round(time.Microsecond).UTC(),
 	}
 	teardownCase := teardown("users", "ID = $1", user.ID)
@@ -85,8 +86,8 @@ func TestNewUser(t *testing.T) {
 		t.Fatalf("error on calling GetUser; %#v", err)
 	}
 	if !reflect.DeepEqual(fetchUser, user) {
-		t.Errorf("expected \n%q", user)
-		t.Errorf("\ngot:\n%q", fetchUser)
+		t.Errorf("expected \n%v", user)
+		t.Errorf("\ngot:\n%v", fetchUser)
 	}
 
 	fetchUser, err = db.GetUserByScreenName(user.ScreenName)
@@ -101,9 +102,5 @@ func TestNewUser(t *testing.T) {
 	fetchUser, err = db.GetUserByScreenName("does not exist")
 	if err != sql.ErrNoRows {
 		t.Fatalf("expected ErrNoRows got; %#v", err)
-	}
-	if !reflect.DeepEqual(fetchUser, user) {
-		t.Errorf("expected \n%q", user)
-		t.Errorf("\ngot:\n%q", fetchUser)
 	}
 }
