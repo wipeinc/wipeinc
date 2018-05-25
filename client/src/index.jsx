@@ -1,13 +1,10 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import Profile from './pages/profile/Profile';
+import React from 'react';
+import App from './components/App';
+import createStore from './store/createStore';
 
-const App = () => (
-  <Router>
-    <Route path="/profile/:screenName" component={Profile} />
-  </Router>
-);
+/* eslint-disable no-underscore-dangle */
+const store = createStore(window.__INITIAL_STATE__);
+/* estlin-enable */
 
-
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App store={store} />, document.getElementById('root'));
