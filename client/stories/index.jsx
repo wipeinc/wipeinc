@@ -21,6 +21,7 @@ const sweetlie = {
   friends: 101,
   statues: 1662,
   updatedAt: '2018-05-22T21:21:16.531685Z',
+  createdAt: '2015-05-22T21:21:16.531685Z',
 };
 
 storiesOf('User', module)

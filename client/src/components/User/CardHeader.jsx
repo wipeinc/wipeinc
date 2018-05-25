@@ -5,10 +5,10 @@ import Avatar from './Avatar';
 
 
 const Name = styled.p`
-  color: white;
   font-size: 18px;
   margin-top: 10px;
   margin-bottom: 10px;
+  text-shadow:0 2px 1px rgba(0,0,0,.6);
 `;
 
 const NameBox = styled.div`
@@ -25,12 +25,12 @@ const StyledAvatar = styled(Avatar)`
 `;
 
 const Description = styled.p`
-  margin-top: 14px;
+  margin-top: 20px;
   margin-bottom: 16px;
   margin-left: 50px;
   margin-right: 50px;
-  color: white;
   text-align: center;
+  text-shadow:0 2px 1px rgba(0,0,0,.6);
 `;
 
 const CardHeader = (props) => {
