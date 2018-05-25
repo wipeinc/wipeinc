@@ -1,25 +1,31 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Avatar from './Avatar';
+import styled from 'styled-components';
+import CardHeader from './CardHeader';
+import UserStats from './UserStats';
+
+const Card = styled.div`
+  width: 500px;
+`;
 
 const User = ({ user }) => (
-  <div className="card">
+  <Card>
     <div className="card-content">
-      <Avatar url={user.image} />
-      <div className="media-content">
-        <p className="title is-4">{user.name}</p>
-        <p className="subtitle is-6">{user.screenName}</p>
-      </div>
-      <div className="field is-grouped">
-        <div className="control">
-          <div className="tags">
-            <span className="tag">F</span>
-            <span className="tag">12</span>
-          </div>
-        </div>
-      </div>
+      <CardHeader
+        background={user.banner}
+        avatar={user.image}
+        name={user.name}
+        screenName={user.screenName}
+        description={user.description}
+      />
+      <UserStats
+        followers={user.followers}
+        friends={user.friends}
+        statues={user.statues}
+        favorites={user.favorites}
+      />
     </div>
-  </div>
+  </Card>
 );
 
 User.propTypes = {
@@ -27,6 +33,12 @@ User.propTypes = {
     name: PropTypes.string.isRequired,
     screenName: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
+    banner: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    followers: PropTypes.number.isRequired,
+    friends: PropTypes.number.isRequired,
+    statues: PropTypes.number.isRequired,
+    favorites: PropTypes.number.isRequired,
   }).isRequired,
 };
 
