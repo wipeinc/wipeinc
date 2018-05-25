@@ -33,7 +33,7 @@ const User = ({ user }) => (
         <UserStats
           followers={user.followers}
           friends={user.friends}
-          statues={user.statues}
+          statuses={user.statuses}
           favorites={user.favorites}
         />
         <JoinedAt date={user.createdAt} />
@@ -51,7 +51,7 @@ User.propTypes = {
     description: PropTypes.string.isRequired,
     followers: PropTypes.number.isRequired,
     friends: PropTypes.number.isRequired,
-    statues: PropTypes.number.isRequired,
+    statuses: PropTypes.number.isRequired,
     favorites: PropTypes.number.isRequired,
     createdAt: PropTypes.string.isRequired,
   }).isRequired,

@@ -27,12 +27,12 @@ const Value = styled.dl`
 const UserStats = ({
   followers,
   friends,
-  statues,
+  statuses,
   favorites,
 }) => (
   <Definitions>
     <Property>Tweets</Property>
-    <Value>{statues}</Value>
+    <Value>{statuses}</Value>
     <Property>Favorites</Property>
     <Value>{favorites}</Value>
     <Property>Follwing</Property>
@@ -45,7 +45,7 @@ const UserStats = ({
 UserStats.propTypes = {
   followers: PropTypes.number.isRequired,
   friends: PropTypes.number.isRequired,
-  statues: PropTypes.number.isRequired,
+  statuses: PropTypes.number.isRequired,
   favorites: PropTypes.number.isRequired,
 };
 
