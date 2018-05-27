@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
@@ -39,7 +40,13 @@ func init() {
 func Serve() {
 	router := mux.NewRouter()
 	router.HandleFunc("/profile/{name}", ShowProfile)
-	http.ListenAndServe(":8000", router)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:9000"},
+		AllowCredentials: true,
+		Debug:            false,
+	})
+	handler := c.Handler(router)
+	http.ListenAndServe(":8000", handler)
 }
 
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
