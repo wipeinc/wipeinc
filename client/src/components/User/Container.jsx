@@ -7,14 +7,16 @@ import User from './';
 
 class Container extends React.Component {
   componentDidMount() {
-    this.props.dispatch(fetchUser(this.props.screenName));
+    this.props.fetchUser(this.props.screenName);
   }
   render() {
+    console.log("trigerring render");
+    console.dir(this.props);
     const { user, loading, error } = this.props;
     if (error) {
       return <p>{error}</p>;
     }
-    if (loading) {
+    if (loading || !user) {
       return <p>loading...</p>;
     }
     return <User user={user} />;
@@ -23,23 +25,27 @@ class Container extends React.Component {
 
 
 Container.propTypes = {
-  user: PropTypes.object,
-  loading: PropTypes.bool,
-  error: PropTypes.string,
+  user: PropTypes.object.isRequired,
+  loading: PropTypes.bool.isRequired,
+  error: PropTypes.string.isRequired,
   screenName: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired,
+  fetchUser: PropTypes.func.isRequired,
 };
 
-Container.defaultProps = {
-  user: null,
-  loading: true,
-  error: null,
+const mapDispatchToProps = {
+  fetchUser,
 };
 
-const mapStateToProps = ({ user }) => ({
-  user: user.user,
-  loading: user.loading,
-  error: user.error,
-});
+const mapStateToProps = (state) => {
+  const { user = {}, loading = true, error = '' } = state.user.toJS();
+  console.log('mapsToProps');
+  console.dir(state.user);
+  console.dir(user);
+  return ({
+    user,
+    loading,
+    error,
+  });
+};
 
-export default connect(mapStateToProps)(Container);
+export default connect(mapStateToProps, mapDispatchToProps)(Container);
