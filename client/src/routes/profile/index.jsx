@@ -1,17 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserContainer from '../../components/User/Container';
 
 const Profile = ({ match }) => (
-  <h1>loading {match.params.screenName} profile</h1>
+  <UserContainer screenName={match.params.screenName} />
 );
 
 Profile.propTypes = {
   match: PropTypes.shape({
-    screenName: PropTypes.shape({
+    params: PropTypes.shape({
       screenName: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
 };
-
 
 export default Profile;

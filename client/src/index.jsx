@@ -2,9 +2,9 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import App from './components/App';
 import createStore from './store/createStore';
+import initialState from './reducers/initialState';
 
-/* eslint-disable no-underscore-dangle */
-const store = createStore(window.__INITIAL_STATE__);
-/* estlin-enable */
+const store = createStore(initialState);
+
 
 ReactDOM.render(<App store={store} />, document.getElementById('root'));

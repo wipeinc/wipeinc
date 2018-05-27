@@ -23,11 +23,11 @@ function checkStatus(response) {
   return response;
 }
 
-
 export default function fetchUser(screenName) {
+  console.log(`fetching ${screenName}`);
   return (dispatch) => {
     dispatch(fetchUserBegin(screenName));
-    return fetch(`/user/${screenName}`)
+    return fetch(`${__API_BASE_URL__}/profile/${screenName}`)
       .then(checkStatus)
       .then(res => res.json())
       .then((data) => {

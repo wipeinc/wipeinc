@@ -26,7 +26,7 @@ describe('userActions', () => {
   });
 
   it('fetch user and return FETCH_USER_SUCCESS when its done', () => {
-    fetchMock.getOnce(`/user/${user.screenName}`, { body: user, headers: { 'content-type': 'application/json' } });
+    fetchMock.getOnce(`${__API_BASE_URL__}/user/${user.screenName}`, { body: user, headers: { 'content-type': 'application/json' } });
     const expectedActions = [
       { type: types.FETCH_USER_BEGIN, payload: { screenName: user.screenName } },
       { type: types.FETCH_USER_SUCCESS, payload: { user } },

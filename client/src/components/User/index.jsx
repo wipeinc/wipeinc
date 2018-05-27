@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
-import { connect } from 'react-redux';
-import { fetchUser } from '../../actions/userActions';
+
 import CardHeader from './CardHeader';
 import UserStats from './UserStats';
 import JoinedAt from './JoinedAt';
@@ -21,44 +20,28 @@ const CardContent = styled.div`
   padding-bottom: 10px;
 `;
 
-class User extends React.Component {
-  componentDidMount() {
-    this.props.dispatch(fetchUser(this.props.screenName));
-  }
-  render() {
-    const { user, loading, error } = this.props;
-    if (error) {
-      return <p>{error}</p>;
-    }
-    if (loading) {
-      return <p>loading...</p>;
-    }
-
-    return (
-      <Card>
-        <div className="card-content">
-          <CardHeader
-            background={user.banner}
-            avatar={user.image}
-            name={user.name}
-            screenName={user.screenName}
-            description={user.description}
-          />
-          <CardContent>
-            <UserStats
-              followers={user.followers}
-              friends={user.friends}
-              statuses={user.statuses}
-              favorites={user.favorites}
-            />
-            <JoinedAt date={user.createdAt} />
-          </CardContent>
-        </div>
-      </Card>
-    );
-  }
-}
-
+const User = ({ user }) => (
+  <Card>
+    <div className="card-content">
+      <CardHeader
+        background={user.banner}
+        avatar={user.image}
+        name={user.name}
+        screenName={user.screenName}
+        description={user.description}
+      />
+      <CardContent>
+        <UserStats
+          followers={user.followers}
+          friends={user.friends}
+          statuses={user.statuses}
+          favorites={user.favorites}
+        />
+        <JoinedAt date={user.createdAt} />
+      </CardContent>
+    </div>
+  </Card>
+);
 
 User.propTypes = {
   user: PropTypes.shape({
@@ -73,16 +56,6 @@ User.propTypes = {
     favorites: PropTypes.number.isRequired,
     createdAt: PropTypes.string.isRequired,
   }).isRequired,
-  loading: PropTypes.bool.isRequired,
-  error: PropTypes.string.isRequired,
-  screenName: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => ({
-  user: state.user.user,
-  loading: state.user.loading,
-  error: state.user.error,
-});
-
-export default connect(mapStateToProps)(User);
+export default User;

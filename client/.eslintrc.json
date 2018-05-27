@@ -4,5 +4,8 @@
     "browser": true,
     "jest/globals": true
   },
+  "globals" : {
+    "__API_BASE_URL__": true
+  },
   "plugins": ["jest"]
 }

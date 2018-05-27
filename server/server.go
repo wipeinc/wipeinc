@@ -41,7 +41,7 @@ func Serve() {
 	router := mux.NewRouter()
 	router.HandleFunc("/profile/{name}", ShowProfile)
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:9000"},
+		AllowedOrigins:   []string{"http://localhost:8080"},
 		AllowCredentials: true,
 		Debug:            false,
 	})

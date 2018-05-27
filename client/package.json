@@ -18,7 +18,10 @@
     "setupTestFrameworkScriptFile": "<rootDir>/__tests__/setup/setupEnzyme.js",
     "testPathIgnorePatterns": [
       "<rootDir>/__tests__/setup/"
-    ]
+    ],
+    "globals": {
+      "__API_BASE_URL__": "http://localhost/tests"
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",

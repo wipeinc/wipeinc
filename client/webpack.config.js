@@ -2,6 +2,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const webpack = require('webpack');
 const path = require('path');
 const autoprefixer = require('autoprefixer');
+const webpack = require('webpack');
 
 const config = {
   entry: './src/index.jsx',
@@ -60,6 +61,9 @@ const config = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      __API_BASE_URL__: JSON.stringify('http://localhost:8000'),
+    }),
     new HtmlWebpackPlugin({
       template: './src/index.html',
       inject: false,
