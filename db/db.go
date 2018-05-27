@@ -3,11 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
 	"github.com/wipeinc/wipeinc/model"
-	// file driver
-	_ "github.com/golang-migrate/migrate/source/file"
 
 	// postgres driver
 	_ "github.com/lib/pq"
@@ -40,21 +36,6 @@ func (db *PGDatabase) Connect() error {
 	var err error
 	db.db, err = sql.Open("postgres", db.url)
 	return err
-}
-
-// Migrate proceed to the migrations
-func (db *PGDatabase) Migrate() error {
-	driver, err := postgres.WithInstance(db.db, &postgres.Config{})
-	if err != nil {
-		return err
-	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
-		"postgres", driver)
-	if err != nil {
-		return err
-	}
-	return m.Steps(1)
 }
 
 // UpdateUser update every field of a  twitter user except ID

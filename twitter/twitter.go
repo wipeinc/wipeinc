@@ -1,12 +1,10 @@
 package twitter
 
 import (
-	"log"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wow-sweetlie/anaconda"
 )
@@ -19,11 +17,6 @@ type Client struct {
 }
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	log.Print(os.Getenv("TWITTER_CONSUMER_KEY"))
 	anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
 	anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
 }

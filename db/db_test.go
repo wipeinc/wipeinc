@@ -99,7 +99,7 @@ func TestNewUser(t *testing.T) {
 		t.Errorf("\ngot:\n%q", fetchUser)
 	}
 
-	fetchUser, err = db.GetUserByScreenName("does not exist")
+	_, err = db.GetUserByScreenName("does not exist")
 	if err != sql.ErrNoRows {
 		t.Fatalf("expected ErrNoRows got; %#v", err)
 	}

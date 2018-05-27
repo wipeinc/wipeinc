@@ -1,18 +1,17 @@
-package server
+package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
+	"google.golang.org/appengine"
 )
 
 var twitterAccessToken string
@@ -20,33 +19,20 @@ var twitterAccessTokenSecret string
 var wipeincDB *db.PGDatabase
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	twitterAccessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
 	twitterAccessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
-
-	wipeincDB, err = db.New(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = wipeincDB.Connect()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
-func Serve() {
+func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/profile/{name}", ShowProfile)
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080"},
+		AllowedOrigins:   []string{"https://wipeinc.io"},
 		AllowCredentials: true,
-		Debug:            false,
 	})
 	handler := c.Handler(router)
-	http.ListenAndServe(":8000", handler)
+	http.Handle("/", handler)
+	appengine.Main()
 }
 
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
@@ -55,14 +41,14 @@ func ShowProfile(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 
-	user, err = wipeincDB.GetUserByScreenName(params["name"])
-	if err == sql.ErrNoRows {
+	user, err = db.DB.GetUser(params["name"])
+	if err != nil {
 		tc := twitter.NewClient(twitterAccessToken, twitterAccessTokenSecret)
 		user, err = tc.GetUser(params["name"])
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = wipeincDB.NewUser(user)
+		err = db.DB.AddUser(user)
 		if err != nil {
 			log.Fatal(err)
 		}
