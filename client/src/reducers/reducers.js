@@ -1,7 +1,9 @@
 import { combineReducers } from 'redux';
+import userReducer from './userReducer';
 
 const makeRootReducer = asyncReducers => (
   combineReducers({
+    user: userReducer,
     ...asyncReducers,
   })
 );

@@ -4,7 +4,7 @@ import {
   createStore as createReduxStore,
 } from 'redux';
 import thunk from 'redux-thunk';
-import makeRootReducer from './reducers';
+import makeRootReducer from '../reducers/reducers';
 
 
 const createStore = (initialState = {}) => {
@@ -26,9 +26,9 @@ const createStore = (initialState = {}) => {
   );
   store.asyncReducers = {};
   if (module.hot) {
-    module.hot.accept('./reducers', () => {
+    module.hot.accept('../reducers/reducers', () => {
       /* eslint-disable global-require */
-      const reducers = require('./reducers').default;
+      const reducers = require('../reducers/reducers').default;
       /* eslint-enable */
       store.replaceReducer(reducers(store.asyncReducers));
     });

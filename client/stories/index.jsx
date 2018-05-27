@@ -1,9 +1,12 @@
+import 'normalize.css';
 import React from 'react';
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
-import {storiesOf} from '@storybook/react';
-import 'normalize.css';
+import { storiesOf } from '@storybook/react';
+import { Provider } from './Provider';
+
+
 import User from '../src/components/User';
-import Avatar from '../src/components/User/Avatar';
+
 
 const sweetlie = {
   "id": 820953585441771521,
@@ -24,4 +27,13 @@ const sweetlie = {
   "updatedAt": "2018-05-25T11:39:22.045269Z"
 }
 
-storiesOf('User', module).add('avatar', () => <Avatar url={sweetlie.image}/>).add('simple user', () => <User user={sweetlie}/>);
+
+storiesOf('User', module)
+  .addDecorator(story => <Provider story={story()} />)
+  .add('sweetlie', () => (
+    <User
+      user={sweetlie}
+      screenName={sweetlie.screenName}
+      loading={false}
+      error={null}
+    />));
