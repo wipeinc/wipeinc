@@ -14,7 +14,7 @@ const Card = styled.div`
 `;
 
 const CardContent = styled.div`
-  background: #25252f;
+  background-color: #25252f;
   margin-top: 10px;
   padding-top:  10px;
   padding-bottom: 10px;
