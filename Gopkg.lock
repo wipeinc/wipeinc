@@ -14,6 +14,12 @@
   revision = "53511d3c733003985b0b76f733df1f4d0095ee6a"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/dustin/go-jsonpointer"
   packages = ["."]
@@ -44,13 +50,10 @@
   version = "v1.6.2"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/lib/pq"
-  packages = [
-    ".",
-    "oid"
-  ]
-  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -59,14 +62,10 @@
   version = "v1.4.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/wipeinc/wipeinc"
-  packages = [
-    "db",
-    "model",
-    "twitter"
-  ]
-  revision = "0df016c6fe23ce573ff4f019a622faa878b8b180"
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   name = "github.com/wow-sweetlie/anaconda"
@@ -83,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "639aebb7d3601c42a577959a6787d811f0ba1b35b20615c3b7ffa7753dd4e87d"
+  inputs-digest = "fe490e5bafcf83f7fe060c8a309b061a0dee4902d3292986f776f5d7f437100b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -34,8 +34,12 @@
   version = "1.4.0"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/wipeinc/wipeinc"
+  name = "github.com/stretchr/testify"
+  version = "1.2.1"
+
+[[constraint]]
+  name = "github.com/wow-sweetlie/anaconda"
+  version = "2.0.0"
 
 [prune]
   go-tests = true
