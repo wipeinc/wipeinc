@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -11,19 +11,14 @@ import (
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
-	"google.golang.org/appengine"
 )
 
 var twitterAccessToken string
 var twitterAccessTokenSecret string
-var wipeincDB *db.PGDatabase
 
 func init() {
 	twitterAccessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
 	twitterAccessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
-}
-
-func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/profile/{name}", ShowProfile)
 	c := cors.New(cors.Options{
@@ -32,7 +27,6 @@ func main() {
 	})
 	handler := c.Handler(router)
 	http.Handle("/", handler)
-	appengine.Main()
 }
 
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
