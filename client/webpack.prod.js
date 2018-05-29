@@ -45,7 +45,7 @@ module.exports = merge(common, {
   },
   plugins: [
     new webpack.DefinePlugin({
-      __API_BASE_URL__: JSON.stringify('https://wipeinc.io/'),
+      __API_BASE_URL__: JSON.stringify('https://wipeinc.io/api/'),
     }),
     // new BundleAnalyzerPlugin(),
     new BaseHrefWebpackPlugin({ baseHref: 'https://s3-eu-west-1.amazonaws.com/wipeinc/' }),
