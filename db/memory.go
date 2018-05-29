@@ -9,7 +9,7 @@ import (
 
 type memoryDB struct {
 	mu    sync.Mutex
-	users map[string]*model.User // maps from Book ID to Book.
+	users map[string]*model.User
 }
 
 func newMemoryDB() *memoryDB {
@@ -31,11 +31,11 @@ func (db *memoryDB) GetUser(screenName string) (*model.User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	book, ok := db.users[screenName]
+	user, ok := db.users[screenName]
 	if !ok {
 		return nil, fmt.Errorf("memorydb: book not found with screenName %s", screenName)
 	}
-	return book, nil
+	return user, nil
 }
 
 // AddBook saves a given book, assigning it a new ID.
@@ -43,7 +43,7 @@ func (db *memoryDB) AddUser(u *model.User) (err error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	db.users[u.ScreenName] = u
+	db.users[u.TwitterUser.ScreenName] = u
 
 	return nil
 }

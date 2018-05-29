@@ -1,89 +1,48 @@
 package twitter
 
 import (
-	"net/url"
+	"context"
 	"os"
-	"time"
 
-	"github.com/wipeinc/wipeinc/model"
-	"github.com/wow-sweetlie/anaconda"
+	twitterGo "github.com/dghubble/go-twitter/twitter"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
-const Timeout = 1 * time.Hour
-
-// Client Twitter API wrapper
 type Client struct {
-	API *anaconda.TwitterApi
+	client *twitterGo.Client
 }
+
+var AppClient *Client
+var credentials *clientcredentials.Config
+
+var accessToken string
+var token string
 
 func init() {
-	anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
-	anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
+	accessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
+	credentials = newCredentials()
 }
 
-func (c *Client) GetUser(screenName string) (*model.User, error) {
-	user, err := c.API.GetUsersShow(screenName, nil)
-	if err != nil {
-		return nil, err
+func newCredentials() *clientcredentials.Config {
+	return &clientcredentials.Config{
+		ClientID:     os.Getenv("TWITTER_CONSUMER_KEY"),
+		ClientSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
+		TokenURL:     "https://api.twitter.com/oauth2/token",
 	}
-	return model.NewUser(user)
 }
 
-func (c *Client) BlockUserFollowers(screenName string) error {
-	friends, err := c.GetFriendsIds()
-	if err != nil {
-		return err
-	}
-	v := url.Values{}
-	v.Set("screen_name", screenName)
-	followers, err := c.GetFollowersIds(v)
-	if err != nil {
-		return err
-	}
-	followersToBan := MinusIDList(followers, friends)
-	c.BlockUserIds(followersToBan)
-	return nil
-}
+func NewAppClient(ctx context.Context) *Client {
+	config := newCredentials()
+	httpClient := config.Client(ctx)
 
-func (c *Client) BlockUserIds(ids []int64) error {
-	for _, id := range ids {
-		_, err := c.API.BlockUserId(id, nil)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// GetFriendsIds return a slice of friends ids
-func (c *Client) GetFriendsIds() ([]int64, error) {
-	ids := []int64{}
-	pages := c.API.GetFriendsIdsAll(nil)
-	for page := range pages {
-		if page.Error != nil {
-			return nil, page.Error
-		}
-		ids = append(ids, page.Ids...)
-	}
-	return ids, nil
-}
-
-// GetFollowersIds return a slice of followers ids
-func (c *Client) GetFollowersIds(v url.Values) ([]int64, error) {
-	ids := []int64{}
-	pages := c.API.GetFollowersIdsAll(v)
-	for page := range pages {
-		if page.Error != nil {
-			return nil, page.Error
-		}
-		ids = append(ids, page.Ids...)
-	}
-	return ids, nil
-}
-
-// NewClient return a new client based on token credentials
-func NewClient(accessToken string, accessTokenSecret string) *Client {
+	// Twitter client
 	return &Client{
-		API: anaconda.NewTwitterApi(accessToken, accessTokenSecret),
+		client: twitterGo.NewClient(httpClient),
 	}
+}
+
+func (c *Client) GetUserShow(screenName string) (*twitterGo.User, error) {
+	userShowParams := &twitterGo.UserShowParams{ScreenName: screenName}
+	user, _, err := c.client.Users.Show(userShowParams)
+	return user, err
 }

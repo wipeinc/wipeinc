@@ -1,24 +1,22 @@
-package server
+package main
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
+	"google.golang.org/appengine"
 )
 
 var twitterAccessToken string
 var twitterAccessTokenSecret string
 
-func init() {
-	twitterAccessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
-	twitterAccessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
+func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/profile/{name}", ShowProfile)
 	c := cors.New(cors.Options{
@@ -27,6 +25,7 @@ func init() {
 	})
 	handler := c.Handler(router)
 	http.Handle("/", handler)
+	appengine.Main()
 }
 
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
@@ -37,11 +36,13 @@ func ShowProfile(w http.ResponseWriter, r *http.Request) {
 
 	user, err = db.DB.GetUser(params["name"])
 	if err != nil {
-		tc := twitter.NewClient(twitterAccessToken, twitterAccessTokenSecret)
-		user, err = tc.GetUser(params["name"])
+		ctx := appengine.NewContext(r)
+		appClient := twitter.NewAppClient(ctx)
+		fetchedUser, err := appClient.GetUserShow(params["name"])
 		if err != nil {
 			log.Fatal(err)
 		}
+		user = model.NewUser(fetchedUser)
 		err = db.DB.AddUser(user)
 		if err != nil {
 			log.Fatal(err)
