@@ -2,40 +2,34 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/ChimeraCoder/tokenbucket"
+  name = "github.com/cenkalti/backoff"
   packages = ["."]
-  revision = "c5a927568de7aad8a58127d80bcd36ca4e71e454"
+  revision = "2ea60e5f094469f9e65adb9cd103795b73ae743e"
+  version = "v2.0.0"
 
 [[projects]]
   branch = "master"
-  name = "github.com/azr/backoff"
-  packages = ["."]
-  revision = "53511d3c733003985b0b76f733df1f4d0095ee6a"
+  name = "github.com/dghubble/go-twitter"
+  packages = ["twitter"]
+  revision = "093ee2cf4e32ef608cded0ace84d5d82a52da4fa"
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  name = "github.com/dghubble/sling"
+  packages = ["."]
+  revision = "eb56e89ac5088bebb12eef3cb4b293300f43608b"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
   version = "v1.1.0"
 
 [[projects]]
   branch = "master"
-  name = "github.com/dustin/go-jsonpointer"
-  packages = ["."]
-  revision = "ba0abeacc3dcca5b9b20f31509c46794edbc9965"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/dustin/gojson"
-  packages = ["."]
-  revision = "2e71ec9dd5adce3b168cd0dbde03b5cc04951c30"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/garyburd/go-oauth"
-  packages = ["oauth"]
-  revision = "bca2e7f09a178fd36b034107a00e2323bca6a82e"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -50,38 +44,50 @@
   version = "v1.6.2"
 
 [[projects]]
-  name = "github.com/pmezard/go-difflib"
-  packages = ["difflib"]
-  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-  version = "v1.0.0"
-
-[[projects]]
   name = "github.com/rs/cors"
   packages = ["."]
   revision = "ca016a06a5753f8ba03029c0aa5e54afb1bf713f"
   version = "v1.4.0"
 
 [[projects]]
-  name = "github.com/stretchr/testify"
-  packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
-
-[[projects]]
-  name = "github.com/wow-sweetlie/anaconda"
-  packages = ["."]
-  revision = "9c68684170b980d5b4c2ed08fae9b530e659904d"
-  version = "v2.0.0"
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = [
+    "context",
+    "context/ctxhttp"
+  ]
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "clientcredentials",
+    "internal"
+  ]
+  revision = "8373c646843f3728aafb0d706e6edb223532ae73"
+
+[[projects]]
+  name = "google.golang.org/appengine"
+  packages = [
+    ".",
+    "internal",
+    "internal/app_identity",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/modules",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch"
+  ]
+  revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
+  version = "v1.0.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fe490e5bafcf83f7fe060c8a309b061a0dee4902d3292986f776f5d7f437100b"
+  inputs-digest = "59239271a9eecf553be47ef55fe3d47bf3766b57db4c2cf7e7ffec8f08d82c68"
   solver-name = "gps-cdcl"
   solver-version = 1
