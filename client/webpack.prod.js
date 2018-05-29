@@ -8,7 +8,7 @@ module.exports = merge(common, {
   mode: 'production',
   plugins: [
     new webpack.DefinePlugin({
-      __API_BASE_URL__: JSON.stringify('https://api.wipeinc.io'),
+      __API_BASE_URL__: JSON.stringify('https://wipeinc.io/api'),
     }),
   ],
 });
