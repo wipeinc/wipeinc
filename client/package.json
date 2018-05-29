@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "webpack --mode development --config webpack.dev.js",
-    "prod": "webpack --mode production",
+    "prod": "webpack --mode production --config webpack.prod.js",
     "start": "webpack-dev-server --mode development --open --config webpack.dev.js",
     "storybook": "start-storybook -p 9001 -c .storybook",
     "test": "jest",

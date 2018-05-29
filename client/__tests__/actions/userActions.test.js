@@ -26,13 +26,14 @@ describe('userActions', () => {
   });
 
   it('fetch user and return FETCH_USER_SUCCESS when its done', () => {
-    fetchMock.getOnce(`${__API_BASE_URL__}/user/${user.screenName}`, { body: user, headers: { 'content-type': 'application/json' } });
+    const { twitterUser: { screen_name: screenName } } = user;
+    fetchMock.getOnce(`${__API_BASE_URL__}/profile/${screenName}`, { body: user, headers: { 'content-type': 'application/json' } });
     const expectedActions = [
-      { type: types.FETCH_USER_BEGIN, payload: { screenName: user.screenName } },
+      { type: types.FETCH_USER_BEGIN, payload: { screenName } },
       { type: types.FETCH_USER_SUCCESS, payload: { user } },
     ];
     const store = mockStore({ user: { loading: false, user: null, error: null } });
-    return store.dispatch(fetchUser(user.screenName)).then(() => {
+    return store.dispatch(fetchUser(screenName)).then(() => {
       expect(store.getActions()).toEqual(expectedActions);
     });
   });

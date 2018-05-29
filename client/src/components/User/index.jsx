@@ -24,20 +24,20 @@ const User = ({ user }) => (
   <Card>
     <div className="card-content">
       <CardHeader
-        background={user.banner}
-        avatar={user.image}
+        background={user.profile_banner_url}
+        avatar={user.profile_image_url_https}
         name={user.name}
-        screenName={user.screenName}
+        screenName={user.screen_name}
         description={user.description}
       />
       <CardContent>
         <UserStats
-          followers={user.followers}
-          friends={user.friends}
-          statuses={user.statuses}
-          favorites={user.favorites}
+          followers={user.followers_count}
+          friends={user.friends_count}
+          statuses={user.statuses_count}
+          favorites={user.favourites_count}
         />
-        <JoinedAt date={user.createdAt} />
+        <JoinedAt date={user.created_at} />
       </CardContent>
     </div>
   </Card>
@@ -46,15 +46,15 @@ const User = ({ user }) => (
 User.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string.isRequired,
-    screenName: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    banner: PropTypes.string.isRequired,
+    screen_name: PropTypes.string.isRequired,
+    profile_image_url_https: PropTypes.string.isRequired,
+    profile_banner_url: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
-    followers: PropTypes.number.isRequired,
-    friends: PropTypes.number.isRequired,
-    statuses: PropTypes.number.isRequired,
-    favorites: PropTypes.number.isRequired,
-    createdAt: PropTypes.string.isRequired,
+    followers_count: PropTypes.number.isRequired,
+    friends_count: PropTypes.number.isRequired,
+    statuses_count: PropTypes.number.isRequired,
+    favourites_count: PropTypes.number.isRequired,
+    created_at: PropTypes.string.isRequired,
   }).isRequired,
 };
 

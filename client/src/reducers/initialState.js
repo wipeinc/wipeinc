@@ -2,8 +2,8 @@ import { Map } from 'immutable';
 
 export default {
   user: Map({
-    user: null,
+    user: {},
     loading: false,
-    error: null,
+    error: '',
   }),
 };

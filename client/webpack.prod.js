@@ -5,14 +5,10 @@ const webpack = require('webpack');
 const common = require('./webpack.common');
 
 module.exports = merge(common, {
-  mode: 'developement',
-  devServer: {
-    historyApiFallback: true,
-    port: 8082,
-  },
+  mode: 'production',
   plugins: [
     new webpack.DefinePlugin({
-      __API_BASE_URL__: JSON.stringify('http://localhost:8080/api'),
+      __API_BASE_URL__: JSON.stringify('https://api.wipeinc.io'),
     }),
   ],
 });

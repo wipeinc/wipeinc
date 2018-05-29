@@ -7,19 +7,19 @@ export default function userReducer(state = initialState.user, action) {
   switch (action.type) {
     case types.FETCH_USER_BEGIN:
       return Map({
-        user: null,
+        user: {},
         loading: true,
-        error: null,
+        error: '',
       });
     case types.FETCH_USER_SUCCESS:
       return Map({
         user: action.payload.user,
         loading: false,
-        error: null,
+        error: '',
       });
     case types.FETCH_USER_FAILURE:
       return Map({
-        user: null,
+        user: {},
         loading: false,
         error: action.payload.error,
       });

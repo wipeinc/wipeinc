@@ -10,16 +10,14 @@ class Container extends React.Component {
     this.props.fetchUser(this.props.screenName);
   }
   render() {
-    console.log("trigerring render");
-    console.dir(this.props);
     const { user, loading, error } = this.props;
     if (error) {
       return <p>{error}</p>;
     }
-    if (loading || !user) {
+    if (loading || !Object.keys(user).length) {
       return <p>loading...</p>;
     }
-    return <User user={user} />;
+    return <User user={user.twitterUser} />;
   }
 }
 
@@ -37,10 +35,7 @@ const mapDispatchToProps = {
 };
 
 const mapStateToProps = (state) => {
-  const { user = {}, loading = true, error = '' } = state.user.toJS();
-  console.log('mapsToProps');
-  console.dir(state.user);
-  console.dir(user);
+  const { user, loading, error } = state.user.toJS();
   return ({
     user,
     loading,
