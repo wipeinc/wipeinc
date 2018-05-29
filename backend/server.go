@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
@@ -19,8 +21,18 @@ var twitterAccessTokenSecret string
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/profile/{name}", ShowProfile)
+	router.PathPrefix("/").HandlerFunc(ShowIndex)
 	http.Handle("/", router)
 	appengine.Main()
+}
+
+func ShowIndex(w http.ResponseWriter, r *http.Request) {
+	index, err := Asset("static/index.html")
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+	}
+	indexReader := bytes.NewBuffer(index)
+	io.Copy(w, indexReader)
 }
 
 // ShowProfile route for /api/profile/{screenName}
@@ -43,11 +55,6 @@ func ShowProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-	if appengine.IsDevAppServer() {
-		//Allow CORS here By * or specific origin
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	}
 
 	json.NewEncoder(w).Encode(user)

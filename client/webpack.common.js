@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const path = require('path');
 
+
 const config = {
   entry: './src/index.jsx',
   output: {
@@ -33,7 +34,6 @@ const config = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/index.html',
-      inject: false,
     }),
   ],
   resolve: {
