@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
@@ -18,16 +18,12 @@ var twitterAccessTokenSecret string
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/profile/{name}", ShowProfile)
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://wipeinc.io"},
-		AllowCredentials: true,
-	})
-	handler := c.Handler(router)
-	http.Handle("/", handler)
+	router.HandleFunc("/api/profile/{name}", ShowProfile)
+	http.Handle("/", router)
 	appengine.Main()
 }
 
+// ShowProfile route for /api/profile/{screenName}
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var user *model.User
@@ -36,7 +32,7 @@ func ShowProfile(w http.ResponseWriter, r *http.Request) {
 
 	user, err = db.DB.GetUser(params["name"])
 	if err != nil {
-		ctx := appengine.NewContext(r)
+		ctx := context.Background()
 		appClient := twitter.NewAppClient(ctx)
 		fetchedUser, err := appClient.GetUserShow(params["name"])
 		if err != nil {
@@ -47,6 +43,11 @@ func ShowProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+	if appengine.IsDevAppServer() {
+		//Allow CORS here By * or specific origin
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	}
 
 	json.NewEncoder(w).Encode(user)
