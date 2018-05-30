@@ -50,7 +50,7 @@
     "context",
     "context/ctxhttp"
   ]
-  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
+  revision = "89e543239a64caf31d3a6865872ea120b41446df"
 
 [[projects]]
   branch = "master"
@@ -60,7 +60,7 @@
     "clientcredentials",
     "internal"
   ]
-  revision = "8373c646843f3728aafb0d706e6edb223532ae73"
+  revision = "ec22f46f877b4505e0117eeaab541714644fdd28"
 
 [[projects]]
   name = "google.golang.org/appengine"
