@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"cloud.google.com/go/profiler"
 	"github.com/gorilla/mux"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
@@ -19,6 +20,12 @@ var twitterAccessToken string
 var twitterAccessTokenSecret string
 
 func main() {
+	err := profiler.Start(profiler.Config{
+		Service: "myservice",
+	})
+	if err != nil {
+		log.Println(err)
+	}
 	router := mux.NewRouter()
 	router.HandleFunc("/api/profile/{name}", ShowProfile)
 	router.PathPrefix("/").HandlerFunc(ShowIndex)
