@@ -2,17 +2,22 @@
 const merge = require('webpack-merge');
 const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+// const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const { BaseHrefWebpackPlugin } = require('base-href-webpack-plugin');
-const  S3Plugin = require('webpack-s3-plugin')
+const WebpackGoogleCloudStoragePlugin = require('webpack-google-cloud-storage-plugin');
 /* eslint-enable */
 const path = require('path');
 const common = require('./webpack.common');
+const gcloudIdentity = require('./gcloud-identity.json');
 
 const dist = path.resolve(__dirname, 'dist');
 
 module.exports = merge(common, {
   mode: 'production',
+  // warning about size...
+  performance: {
+    hints: false,
+  },
   output: {
     path: dist,
     chunkFilename: '[name].[chunkhash].bundle.js',
@@ -50,15 +55,19 @@ module.exports = merge(common, {
     // new BundleAnalyzerPlugin(),
     new BaseHrefWebpackPlugin({ baseHref: 'https://s3-eu-west-1.amazonaws.com/wipeinc/' }),
     new CleanWebpackPlugin([dist]),
-    new S3Plugin({
-      // Exclude uploading of html
-      exclude: /.*\.html$/,
-      // s3Options are required
-      s3Options: {
-        region: 'eu-west-1',
+    new WebpackGoogleCloudStoragePlugin({
+      directory: './dist/',
+      exclude: ['index.html'],
+      include: [/\.js$/],
+      storageOptions: {
+        projectId: 'atomic-legacy-189222',
+        credentials: gcloudIdentity,
       },
-      s3UploadOptions: {
-        Bucket: 'wipeinc',
+      uploadOptions: {
+        bucketName: 'wipeinc',
+        makePublic: true,
+        gzip: false,
+        destinationNameFn: file => file.name,
       },
     }),
   ],
