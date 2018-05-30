@@ -44,6 +44,9 @@ func ShowIndex(w http.ResponseWriter, r *http.Request) {
 
 // ShowProfile route for /api/profile/{screenName}
 func ShowProfile(w http.ResponseWriter, r *http.Request) {
+	if appengine.IsDevAppServer() {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 	var err error
 	var user *model.User
 

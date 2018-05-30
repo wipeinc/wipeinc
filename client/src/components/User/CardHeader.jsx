@@ -1,13 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import faTwitter from '@fortawesome/fontawesome-free-brands/faTwitter';
 import Avatar from './Avatar';
 
 
 const Name = styled.p`
   font-size: 18px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 7px;
+  margin-bottom: 7px;
   text-shadow:0 2px 1px rgba(0,0,0,.6);
 `;
 
@@ -22,6 +24,15 @@ const IDBox = styled.div`
 
 const StyledAvatar = styled(Avatar)`
   position: absolute;
+`;
+
+const TwitterLink = styled.a`
+  font-size: 18px;
+  margin-top: 0px;
+  margin-bottom: 12px;
+  text-shadow:0 2px 1px rgba(0,0,0,.6);
+  color: #1da1f2;
+  text-decoration: none;
 `;
 
 const Description = styled.p`
@@ -45,12 +56,17 @@ const CardHeader = (props) => {
   `;
 
   const screenName = `@${props.screenName}`;
+  const url = `https://twitter.com/${props.screenName}`;
+
 
   return (
     <Box background={props.background} >
       <IDBox>
         <StyledAvatar url={props.avatar} />
         <NameBox>
+          <TwitterLink href={url}>
+            profile <FontAwesomeIcon icon={faTwitter} size="xs" />
+          </TwitterLink>
           <Name>{props.name}</Name>
           <Name>{screenName}</Name>
         </NameBox>
