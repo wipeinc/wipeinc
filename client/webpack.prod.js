@@ -53,7 +53,7 @@ module.exports = merge(common, {
       __API_BASE_URL__: JSON.stringify('https://wipeinc.io/api'),
     }),
     // new BundleAnalyzerPlugin(),
-    new BaseHrefWebpackPlugin({ baseHref: 'https://s3-eu-west-1.amazonaws.com/wipeinc/' }),
+    new BaseHrefWebpackPlugin({ baseHref: 'https://static.wipeinc.io/' }),
     new CleanWebpackPlugin([dist]),
     new WebpackGoogleCloudStoragePlugin({
       directory: './dist/',
