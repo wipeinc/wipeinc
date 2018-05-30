@@ -12,7 +12,7 @@ const Property = styled.dt`
   padding: 10px 15px;
   &:not(:last-of-type) {
     border-bottom: 1px solid #444;
-  };
+  }
 `;
 
 const Value = styled.dl`
@@ -21,7 +21,7 @@ const Value = styled.dl`
   padding: 10px 15px;
   &:not(:last-of-type) {
     border-bottom: 1px solid #444;
-  };
+  }
 `;
 
 const UserStats = ({
