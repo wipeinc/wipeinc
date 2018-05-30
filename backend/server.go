@@ -21,7 +21,7 @@ var twitterAccessTokenSecret string
 
 func main() {
 	err := profiler.Start(profiler.Config{
-		Service: "myservice",
+		Service: "wipeinc",
 	})
 	if err != nil {
 		log.Println(err)
