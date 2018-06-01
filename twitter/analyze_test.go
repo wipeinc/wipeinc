@@ -1,8 +1,7 @@
 package twitter_test
 
 import (
-	"encoding/json"
-	"os"
+	"log"
 	"testing"
 
 	"github.com/wipeinc/wipeinc/twitter"
@@ -20,10 +19,6 @@ func TestAnalyzeTweets(t *testing.T) {
 	if stats.MostPopularTweets[0].ID != mostPopularTweetID {
 		t.Errorf("expected most pouplar tweet: %d\n", mostPopularTweetID)
 		t.Errorf("got: %d\n", stats.MostPopularTweets[0].ID)
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "    ")
-		if err := enc.Encode(stats); err != nil {
-			panic(err)
-		}
 	}
+	log.Printf("%+v", stats.TopHashtags)
 }
