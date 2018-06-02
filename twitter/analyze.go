@@ -1,7 +1,10 @@
 package twitter
 
 import (
+	"net/url"
 	"sort"
+
+	"log"
 
 	twitterGo "github.com/dghubble/go-twitter/twitter"
 )
@@ -9,6 +12,7 @@ import (
 const favoriteRetweetRatio = 9
 const topHashtagsLen = 10
 const topMentionsLen = 10
+const topDomains = 10
 const mostPopularTweetsLen = 20
 
 // HashtagFreq is the structure for top hashtags
@@ -23,12 +27,30 @@ type MentionFreq struct {
 	F     int
 }
 
+// DomainFreq is the structure for top hashtags
+type DomainFreq struct {
+	Value string
+	F     int
+}
+
 // TweetStats struct returned for twitter statistic anlytics
 type TweetStats struct {
 	MostPopularTweets []twitterGo.Tweet
 	mentionsCount     map[int64]int
+	domainsCount      map[string]int
 	mentions          map[int64]twitterGo.MentionEntity
 	hashtags          map[string]int
+}
+
+var blacklisted = struct{}{}
+var blacklistedDomains = map[string]struct{}{
+	"bit.ly":      blacklisted,
+	"twitter.com": blacklisted,
+}
+
+func isBlacklisted(domain string) bool {
+	_, c := blacklistedDomains[domain]
+	return c
 }
 
 func tweetPopularityScore(tweet twitterGo.Tweet) int {
@@ -42,6 +64,7 @@ func NewTweetStats() *TweetStats {
 		hashtags:          make(map[string]int),
 		mentions:          make(map[int64]twitterGo.MentionEntity),
 		mentionsCount:     make(map[int64]int),
+		domainsCount:      make(map[string]int),
 	}
 }
 
@@ -50,6 +73,25 @@ func (s *TweetStats) AnalyzeUserTweets(tweets []twitterGo.Tweet) {
 	for _, tweet := range tweets {
 		s.AnalyzeTweet(tweet)
 	}
+}
+
+// TopDomains Return top len hashtags
+func (s *TweetStats) TopDomains(len int) []DomainFreq {
+	if len == 0 {
+		len = topDomains
+	}
+	top := make([]DomainFreq, len)
+	for domain, seen := range s.domainsCount {
+		insert := DomainFreq{Value: domain, F: seen}
+		index := sort.Search(len, func(i int) bool {
+			return top[i].F < insert.F
+		})
+		if index < len {
+			copy(top[index+1:], top[index:len-1])
+			top[index] = insert
+		}
+	}
+	return top
 }
 
 // TopHashtags Return top len hashtags
@@ -113,5 +155,16 @@ func (s *TweetStats) AnalyzeTweet(tweet twitterGo.Tweet) {
 	for _, mention := range tweet.Entities.UserMentions {
 		s.mentions[mention.ID] = mention
 		s.mentionsCount[mention.ID]++
+	}
+
+	for _, urlEntity := range tweet.Entities.Urls {
+		u, err := url.Parse(urlEntity.ExpandedURL)
+		if err == nil {
+			if !isBlacklisted(u.Hostname()) {
+				s.domainsCount[u.Hostname()]++
+			}
+		} else {
+			log.Printf("failed to parse url: %s\n", urlEntity.ExpandedURL)
+		}
 	}
 }

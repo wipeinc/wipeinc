@@ -21,6 +21,7 @@ func TestAnalyzeTweets(t *testing.T) {
 		t.Errorf("expected most pouplar tweet: %d\n", mostPopularTweetID)
 		t.Errorf("got: %d\n", stats.MostPopularTweets[0].ID)
 	}
-	log.Printf("%+v", stats.TopHashtags(0))
-	log.Printf("%+v", stats.TopMentions(0))
+	log.Printf("%+v\n", stats.TopHashtags(0))
+	log.Printf("%+v\n", stats.TopMentions(0))
+	log.Printf("%+v\n", stats.TopDomains(0))
 }
