@@ -8,9 +8,15 @@ import (
 	"github.com/wipeinc/wipeinc/twitter"
 )
 
-func tweetWithMention(tweet *twitterGo.Tweet, mention string) {
+func tweetWithMention(mention string) twitterGo.Tweet {
+	if mention == "" {
+		mention = "mention"
+	}
+	tweet := twitterGo.Tweet{}
+	tweet.Entities = &twitterGo.Entities{}
 	entity := twitterGo.MentionEntity{IDStr: mention}
 	tweet.Entities.UserMentions = append(tweet.Entities.UserMentions, entity)
+	return tweet
 }
 
 var tweetWithMentionTests = []struct {
@@ -22,6 +28,15 @@ var tweetWithMentionTests = []struct {
 		"tweets with no mention",
 		[]twitterGo.Tweet{twitterGo.Tweet{}, twitterGo.Tweet{}},
 		[]twitter.Freq{},
+	},
+	{
+		"tweets with one mention",
+		[]twitterGo.Tweet{
+			tweetWithMention(""),
+			tweetWithMention(""),
+			twitterGo.Tweet{},
+		},
+		[]twitter.Freq{twitter.Freq{Value: "mention", F: 2}},
 	},
 }
 
