@@ -8,6 +8,16 @@ import (
 	"github.com/wipeinc/wipeinc/twitter"
 )
 
+func tweetWithMentions(mentions []string) twitterGo.Tweet {
+	tweet := twitterGo.Tweet{}
+	tweet.Entities = &twitterGo.Entities{}
+	for _, mention := range mentions {
+		entity := twitterGo.MentionEntity{IDStr: mention}
+		tweet.Entities.UserMentions = append(tweet.Entities.UserMentions, entity)
+	}
+	return tweet
+}
+
 func tweetWithMention(mention string) twitterGo.Tweet {
 	if mention == "" {
 		mention = "mention"
@@ -17,6 +27,20 @@ func tweetWithMention(mention string) twitterGo.Tweet {
 	entity := twitterGo.MentionEntity{IDStr: mention}
 	tweet.Entities.UserMentions = append(tweet.Entities.UserMentions, entity)
 	return tweet
+}
+
+var tweetWithHashtagTests = []struct {
+	description string
+	len         int
+	in          []twitterGo.Tweet
+	out         []twitter.Freq
+}{
+	{
+		"tweets with no hashtag",
+		0,
+		[]twitterGo.Tweet{twitterGo.Tweet{}, twitterGo.Tweet{}},
+		[]twitter.Freq{},
+	},
 }
 
 var tweetWithMentionTests = []struct {
@@ -60,6 +84,23 @@ var tweetWithMentionTests = []struct {
 		},
 	},
 	{
+		"with 3 tweets, 2 on the same, mentions",
+		0,
+		[]twitterGo.Tweet{
+			tweetWithMentions([]string{"a", "b"}),
+			tweetWithMention("a"),
+			tweetWithMention("a"),
+			tweetWithMention("b"),
+			tweetWithMention("c"),
+			twitterGo.Tweet{},
+		},
+		[]twitter.Freq{
+			twitter.Freq{Value: "a", F: 3},
+			twitter.Freq{Value: "b", F: 2},
+			twitter.Freq{Value: "c", F: 1},
+		},
+	},
+	{
 		"with 3 mentions and len 2",
 		2,
 		[]twitterGo.Tweet{
@@ -76,6 +117,16 @@ var tweetWithMentionTests = []struct {
 			twitter.Freq{Value: "b", F: 2},
 		},
 	},
+}
+
+func TestAnalyzeTweetWithHashtags(t *testing.T) {
+	for _, tt := range tweetWithHashtagTests {
+		stats := twitter.NewTweetStats()
+		stats.AnalyzeTweets(tt.in)
+		if !assert.Equal(t, tt.out, stats.TopHashtags(tt.len)) {
+			t.Errorf("test: '%s' failed\n", tt.description)
+		}
+	}
 }
 
 func TestAnalyzeTweetWithMentions(t *testing.T) {
