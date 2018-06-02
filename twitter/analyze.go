@@ -54,8 +54,8 @@ func NewTweetStats() *TweetStats {
 	}
 }
 
-// AnalyzeUserTweets return a TweetStats structure of the analyzed tweets
-func (s *TweetStats) AnalyzeUserTweets(tweets []twitterGo.Tweet) {
+// AnalyzeTweets return a TweetStats structure of the analyzed tweets
+func (s *TweetStats) AnalyzeTweets(tweets []twitterGo.Tweet) {
 	for _, tweet := range tweets {
 		s.AnalyzeTweet(tweet)
 	}
@@ -97,6 +97,13 @@ func top(elements map[string]int, len int) []Freq {
 			top[index] = insert
 		}
 	}
+	index := sort.Search(len, func(i int) bool {
+		return top[i].Value == ""
+	})
+	if (index + 1) < len {
+		return top[:index]
+	}
+
 	return top
 }
 
@@ -117,21 +124,23 @@ func (s *TweetStats) AnalyzeTweet(tweet twitterGo.Tweet) {
 	if tweet.RetweetedStatus == nil {
 		s.updateMostPopularTweets(tweet)
 	}
-	for _, hashtag := range tweet.Entities.Hashtags {
-		s.hashtagsCount[hashtag.Text]++
-	}
-	for _, mention := range tweet.Entities.UserMentions {
-		s.mentionsCount[mention.IDStr]++
-	}
+	if tweet.Entities != nil {
+		for _, hashtag := range tweet.Entities.Hashtags {
+			s.hashtagsCount[hashtag.Text]++
+		}
+		for _, mention := range tweet.Entities.UserMentions {
+			s.mentionsCount[mention.IDStr]++
+		}
 
-	for _, urlEntity := range tweet.Entities.Urls {
-		u, err := url.Parse(urlEntity.ExpandedURL)
-		if err == nil {
-			if !isBlacklisted(u.Hostname()) {
-				s.domainsCount[u.Hostname()]++
+		for _, urlEntity := range tweet.Entities.Urls {
+			u, err := url.Parse(urlEntity.ExpandedURL)
+			if err == nil {
+				if !isBlacklisted(u.Hostname()) {
+					s.domainsCount[u.Hostname()]++
+				}
+			} else {
+				log.Printf("failed to parse url: %s\n", urlEntity.ExpandedURL)
 			}
-		} else {
-			log.Printf("failed to parse url: %s\n", urlEntity.ExpandedURL)
 		}
 	}
 }
