@@ -18,7 +18,8 @@ type freq struct {
 // TweetStats struct returned for twitter statistic anlytics
 type TweetStats struct {
 	MostPopularTweets []twitterGo.Tweet
-	TopHashtags       []freq
+	mentionsCount     map[int64]int
+	mentions          map[int64]twitterGo.MentionEntity
 	hashtags          map[string]int
 }
 
@@ -31,31 +32,39 @@ func NewTweetStats() *TweetStats {
 	return &TweetStats{
 		MostPopularTweets: make([]twitterGo.Tweet, MostPopularTweetsLen),
 		hashtags:          make(map[string]int),
-		TopHashtags:       make([]freq, TopHashtagsLen),
+		mentions:          make(map[int64]twitterGo.MentionEntity),
+		mentionsCount:     make(map[int64]int),
 	}
 }
 
 // AnalyzeUserTweets return a TweetStats structure of the analyzed tweets
-func AnalyzeUserTweets(tweets []twitterGo.Tweet) *TweetStats {
-	s := NewTweetStats()
+func (s *TweetStats) AnalyzeUserTweets(tweets []twitterGo.Tweet) {
 	for _, tweet := range tweets {
 		s.AnalyzeTweet(tweet)
 	}
-	for hashtag, seen := range s.hashtags {
-		s.updateTopHashtags(freq{value: hashtag, f: seen})
-	}
-
-	return s
 }
 
-func (s *TweetStats) updateTopHashtags(hashtag freq) {
-	index := sort.Search(TopHashtagsLen, func(i int) bool {
-		return s.TopHashtags[i].f < hashtag.f
-	})
-	if index < TopHashtagsLen {
-		copy(s.TopHashtags[index+1:], s.TopHashtags[index:TopHashtagsLen-1])
-		s.TopHashtags[index] = hashtag
+// Return top len hashtags
+func (s *TweetStats) TopHashtags(len int) []freq {
+	if len == 0 {
+		len = TopHashtagsLen
 	}
+	topHashtags := make([]freq, len)
+	for hashtag, seen := range s.hashtags {
+		topHashtags = updateTop(topHashtags, freq{value: hashtag, f: seen})
+	}
+	return topHashtags
+}
+
+func updateTop(top []freq, insert freq) []freq {
+	index := sort.Search(len(top), func(i int) bool {
+		return top[i].f < insert.f
+	})
+	if index < len(top) {
+		copy(top[index+1:], top[index:TopHashtagsLen-1])
+		top[index] = insert
+	}
+	return top
 }
 
 func (s *TweetStats) updateMostPopularTweets(tweet twitterGo.Tweet) {
@@ -77,5 +86,9 @@ func (s *TweetStats) AnalyzeTweet(tweet twitterGo.Tweet) {
 	}
 	for _, hashtag := range tweet.Entities.Hashtags {
 		s.hashtags[hashtag.Text]++
+	}
+	for _, mention := range tweet.Entities.UserMentions {
+		s.mentions[mention.ID] = mention
+		s.mentionsCount[mention.ID]++
 	}
 }

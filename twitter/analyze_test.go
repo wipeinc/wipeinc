@@ -8,7 +8,8 @@ import (
 )
 
 func TestAnalyzeTweets(t *testing.T) {
-	stats := twitter.AnalyzeUserTweets(KimTimeline)
+	stats := twitter.NewTweetStats()
+	stats.AnalyzeUserTweets(KimTimeline)
 
 	const mostPopularTweetID = 997850510219620353
 	if len(stats.MostPopularTweets) != 20 {
@@ -20,5 +21,5 @@ func TestAnalyzeTweets(t *testing.T) {
 		t.Errorf("expected most pouplar tweet: %d\n", mostPopularTweetID)
 		t.Errorf("got: %d\n", stats.MostPopularTweets[0].ID)
 	}
-	log.Printf("%+v", stats.TopHashtags)
+	log.Printf("%+v", stats.TopHashtags(0))
 }
