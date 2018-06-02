@@ -21,16 +21,19 @@ func tweetWithMention(mention string) twitterGo.Tweet {
 
 var tweetWithMentionTests = []struct {
 	description string
+	len         int
 	in          []twitterGo.Tweet
 	out         []twitter.Freq
 }{
 	{
 		"tweets with no mention",
+		0,
 		[]twitterGo.Tweet{twitterGo.Tweet{}, twitterGo.Tweet{}},
 		[]twitter.Freq{},
 	},
 	{
 		"tweets with one mention",
+		0,
 		[]twitterGo.Tweet{
 			tweetWithMention(""),
 			tweetWithMention(""),
@@ -38,13 +41,48 @@ var tweetWithMentionTests = []struct {
 		},
 		[]twitter.Freq{twitter.Freq{Value: "mention", F: 2}},
 	},
+	{
+		"with 3 mentions",
+		0,
+		[]twitterGo.Tweet{
+			tweetWithMention("a"),
+			tweetWithMention("a"),
+			tweetWithMention("a"),
+			tweetWithMention("b"),
+			tweetWithMention("b"),
+			tweetWithMention("c"),
+			twitterGo.Tweet{},
+		},
+		[]twitter.Freq{
+			twitter.Freq{Value: "a", F: 3},
+			twitter.Freq{Value: "b", F: 2},
+			twitter.Freq{Value: "c", F: 1},
+		},
+	},
+	{
+		"with 3 mentions and len 2",
+		2,
+		[]twitterGo.Tweet{
+			tweetWithMention("a"),
+			tweetWithMention("a"),
+			tweetWithMention("a"),
+			tweetWithMention("b"),
+			tweetWithMention("b"),
+			tweetWithMention("c"),
+			twitterGo.Tweet{},
+		},
+		[]twitter.Freq{
+			twitter.Freq{Value: "a", F: 3},
+			twitter.Freq{Value: "b", F: 2},
+		},
+	},
 }
 
 func TestAnalyzeTweetWithMentions(t *testing.T) {
 	for _, tt := range tweetWithMentionTests {
 		stats := twitter.NewTweetStats()
 		stats.AnalyzeTweets(tt.in)
-		if !assert.Equal(t, tt.out, stats.TopMentions(0)) {
+		if !assert.Equal(t, tt.out, stats.TopMentions(tt.len)) {
 			t.Errorf("test: '%s' failed\n", tt.description)
 		}
 	}
