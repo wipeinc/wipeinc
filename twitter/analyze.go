@@ -7,12 +7,20 @@ import (
 )
 
 const favoriteRetweetRatio = 9
-const TopHashtagsLen = 10
-const MostPopularTweetsLen = 20
+const topHashtagsLen = 10
+const topMentionsLen = 10
+const mostPopularTweetsLen = 20
 
-type freq struct {
-	value string
-	f     int
+// HashtagFreq is the structure for top hashtags
+type HashtagFreq struct {
+	Value string
+	F     int
+}
+
+// MentionFreq is the structure for top hashtags
+type MentionFreq struct {
+	Value twitterGo.MentionEntity
+	F     int
 }
 
 // TweetStats struct returned for twitter statistic anlytics
@@ -24,13 +32,13 @@ type TweetStats struct {
 }
 
 func tweetPopularityScore(tweet twitterGo.Tweet) int {
-	return tweet.FavoriteCount + tweet.RetweetCount*9
+	return tweet.FavoriteCount + tweet.RetweetCount*favoriteRetweetRatio
 }
 
 // NewTweetStats Create a New TweetStats struct
 func NewTweetStats() *TweetStats {
 	return &TweetStats{
-		MostPopularTweets: make([]twitterGo.Tweet, MostPopularTweetsLen),
+		MostPopularTweets: make([]twitterGo.Tweet, mostPopularTweetsLen),
 		hashtags:          make(map[string]int),
 		mentions:          make(map[int64]twitterGo.MentionEntity),
 		mentionsCount:     make(map[int64]int),
@@ -44,25 +52,40 @@ func (s *TweetStats) AnalyzeUserTweets(tweets []twitterGo.Tweet) {
 	}
 }
 
-// Return top len hashtags
-func (s *TweetStats) TopHashtags(len int) []freq {
+// TopHashtags Return top len hashtags
+func (s *TweetStats) TopHashtags(len int) []HashtagFreq {
 	if len == 0 {
-		len = TopHashtagsLen
+		len = topHashtagsLen
 	}
-	topHashtags := make([]freq, len)
+	top := make([]HashtagFreq, len)
 	for hashtag, seen := range s.hashtags {
-		topHashtags = updateTop(topHashtags, freq{value: hashtag, f: seen})
+		insert := HashtagFreq{Value: hashtag, F: seen}
+		index := sort.Search(len, func(i int) bool {
+			return top[i].F < insert.F
+		})
+		if index < len {
+			copy(top[index+1:], top[index:len-1])
+			top[index] = insert
+		}
 	}
-	return topHashtags
+	return top
 }
 
-func updateTop(top []freq, insert freq) []freq {
-	index := sort.Search(len(top), func(i int) bool {
-		return top[i].f < insert.f
-	})
-	if index < len(top) {
-		copy(top[index+1:], top[index:TopHashtagsLen-1])
-		top[index] = insert
+// TopMentions return the most len user mentionned
+func (s *TweetStats) TopMentions(len int) []MentionFreq {
+	if len == 0 {
+		len = topMentionsLen
+	}
+	top := make([]MentionFreq, len)
+	for ID, mention := range s.mentions {
+		insert := MentionFreq{Value: mention, F: s.mentionsCount[ID]}
+		index := sort.Search(len, func(i int) bool {
+			return top[i].F < insert.F
+		})
+		if index < len {
+			copy(top[index+1:], top[index:len-1])
+			top[index] = insert
+		}
 	}
 	return top
 }
@@ -73,8 +96,8 @@ func (s *TweetStats) updateMostPopularTweets(tweet twitterGo.Tweet) {
 		return tweetPopularityScore(s.MostPopularTweets[i]) < score
 	})
 
-	if index < MostPopularTweetsLen {
-		copy(s.MostPopularTweets[index+1:], s.MostPopularTweets[index:MostPopularTweetsLen-1])
+	if index < mostPopularTweetsLen {
+		copy(s.MostPopularTweets[index+1:], s.MostPopularTweets[index:mostPopularTweetsLen-1])
 		s.MostPopularTweets[index] = tweet
 	}
 }

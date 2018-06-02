@@ -22,4 +22,5 @@ func TestAnalyzeTweets(t *testing.T) {
 		t.Errorf("got: %d\n", stats.MostPopularTweets[0].ID)
 	}
 	log.Printf("%+v", stats.TopHashtags(0))
+	log.Printf("%+v", stats.TopMentions(0))
 }
