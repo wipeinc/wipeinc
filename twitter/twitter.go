@@ -92,7 +92,11 @@ func (c *Client) GetUserShow(screenName string) (*twitterGo.User, error) {
 
 // GetUserTweetsStats return statistics about user tweets
 func (c *Client) GetUserTimeline(screenName string, after int64) ([]twitterGo.Tweet, *Limit, error) {
-	params := &twitterGo.UserTimelineParams{ScreenName: screenName, Count: 200}
+	params := &twitterGo.UserTimelineParams{
+		ScreenName:      screenName,
+		Count:           200,
+		IncludeRetweets: twitterGo.Bool(true),
+	}
 	if after != 0 {
 		params.MaxID = after
 	}

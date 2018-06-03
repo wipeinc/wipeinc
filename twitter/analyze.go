@@ -12,8 +12,9 @@ import (
 const favoriteRetweetRatio = 9
 const topHashtagsLen = 10
 const topMentionsLen = 10
-const topDomains = 10
-const mostPopularTweetsLen = 20
+const topDomainsLen = 10
+const topRetweetsLen = 10
+const mostPopularTweetsLen = 5
 
 // Freq is the structure for sorting
 type Freq struct {
@@ -25,6 +26,7 @@ type Freq struct {
 type TweetStats struct {
 	MostPopularTweets []twitterGo.Tweet
 	mentionsCount     map[string]int
+	retweetsCount     map[string]int
 	domainsCount      map[string]int
 	hashtagsCount     map[string]int
 }
@@ -51,6 +53,7 @@ func NewTweetStats() *TweetStats {
 		hashtagsCount:     make(map[string]int),
 		mentionsCount:     make(map[string]int),
 		domainsCount:      make(map[string]int),
+		retweetsCount:     make(map[string]int),
 	}
 }
 
@@ -64,7 +67,7 @@ func (s *TweetStats) AnalyzeTweets(tweets []twitterGo.Tweet) {
 // TopDomains Return top len hashtags
 func (s *TweetStats) TopDomains(len int) []Freq {
 	if len == 0 {
-		len = topDomains
+		len = topDomainsLen
 	}
 	return top(s.domainsCount, len)
 }
@@ -83,6 +86,14 @@ func (s *TweetStats) TopMentions(len int) []Freq {
 		len = topMentionsLen
 	}
 	return top(s.mentionsCount, len)
+}
+
+// TopRetweets return the most len user retweeted
+func (s *TweetStats) TopRetweets(len int) []Freq {
+	if len == 0 {
+		len = topRetweetsLen
+	}
+	return top(s.retweetsCount, len)
 }
 
 func top(elements map[string]int, len int) []Freq {
@@ -123,13 +134,17 @@ func (s *TweetStats) updateMostPopularTweets(tweet twitterGo.Tweet) {
 func (s *TweetStats) AnalyzeTweet(tweet twitterGo.Tweet) {
 	if tweet.RetweetedStatus == nil {
 		s.updateMostPopularTweets(tweet)
+	} else if tweet.User.ID != tweet.RetweetedStatus.User.ID {
+		s.retweetsCount[tweet.RetweetedStatus.User.IDStr]++
 	}
 	if tweet.Entities != nil {
 		for _, hashtag := range tweet.Entities.Hashtags {
 			s.hashtagsCount[hashtag.Text]++
 		}
 		for _, mention := range tweet.Entities.UserMentions {
-			s.mentionsCount[mention.IDStr]++
+			if mention.ID != tweet.User.ID {
+				s.mentionsCount[mention.IDStr]++
+			}
 		}
 
 		for _, urlEntity := range tweet.Entities.Urls {
