@@ -7,17 +7,60 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 
 	"cloud.google.com/go/profiler"
+	twitterLogin "github.com/dghubble/gologin/twitter"
+	"github.com/dghubble/oauth1"
+	twitterOAuth1 "github.com/dghubble/oauth1/twitter"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
 	"google.golang.org/appengine"
 )
 
-var twitterAccessToken string
-var twitterAccessTokenSecret string
+// Config struct for backend server
+type Config struct {
+	TwitterConsumerKey    string
+	TwitterConsumerSecret string
+	TwitterCallbackURL    string
+	CookieSecretToken     string
+}
+
+const (
+	sessionName    = "wipeinc"
+	sessionUserKey = "twitterID"
+)
+
+var sessionStore sessions.Store
+var sessionSecret string
+var config *Config
+
+func init() {
+	config = &Config{
+		TwitterConsumerKey:    os.Getenv("TWITTER_CONSUMER_KEY"),
+		TwitterConsumerSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
+		TwitterCallbackURL:    os.Getenv("TWITTER_CALLBACK_URL"),
+	}
+	if config.TwitterConsumerKey == "" {
+		log.Fatal("twitter consumer key not set")
+	}
+	if config.TwitterConsumerSecret == "" {
+		log.Fatal("twitter consumer secret not set")
+	}
+	if _, err := url.Parse(config.TwitterCallbackURL); err != nil {
+		log.Fatal("invalid twitter callback url : %s", err.Error())
+	}
+	sessionSecret := os.Getenv("SESSION_SECRET_KEY")
+	if sessionSecret == "" {
+		log.Fatal("session secret not set")
+	}
+	sessionStore = sessions.NewCookieStore([]byte(sessionSecret), nil)
+
+}
 
 func main() {
 	err := profiler.Start(profiler.Config{
@@ -26,13 +69,79 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	router := mux.NewRouter()
-	router.HandleFunc("/api/profile/{name}", ShowProfile)
-	router.PathPrefix("/").HandlerFunc(ShowIndex)
-	http.Handle("/", router)
+	oauth1Config := &oauth1.Config{
+		ConsumerKey:    config.TwitterConsumerKey,
+		ConsumerSecret: config.TwitterConsumerSecret,
+		CallbackURL:    config.TwitterCallbackURL,
+		Endpoint:       twitterOAuth1.AuthorizeEndpoint,
+	}
+	mux := mux.NewRouter()
+	mux.Handle("/twitter/login", twitterLogin.LoginHandler(oauth1Config, nil))
+	mux.Handle("/twitter/callback", twitterLogin.CallbackHandler(oauth1Config, issueSession(), nil))
+	mux.HandleFunc("/api/profile/{name}", ShowProfile)
+	mux.PathPrefix("/").HandlerFunc(ShowIndex)
+	http.Handle("/", mux)
 	appengine.Main()
 }
 
+// issueSession issues a cookie session after successful Twitter login
+func issueSession() http.Handler {
+	fn := func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		twitterUser, err := twitterLogin.UserFromContext(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		session, err := sessionStore.New(req, sessionName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		session.Values[sessionUserKey] = twitterUser.ID
+		err = session.Save(req, w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		http.Redirect(w, req, "/profile", http.StatusFound)
+	}
+	return http.HandlerFunc(fn)
+}
+
+// logoutHandler destroys the session on POSTs and redirects to home.
+func logoutHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method == "POST" {
+		session, err := sessionStore.Get(req, "session")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		delete(session.Values, sessionUserKey)
+		session.Options.MaxAge = -1
+		session.Save(req, w)
+	}
+	http.Redirect(w, req, "/", http.StatusFound)
+}
+
+// requireLogin redirects unauthenticated users to the login route.
+func requireLogin(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, req *http.Request) {
+		if !isAuthenticated(req) {
+			http.Redirect(w, req, "/", http.StatusFound)
+			return
+		}
+		next.ServeHTTP(w, req)
+	}
+	return http.HandlerFunc(fn)
+}
+
+// isAuthenticated returns true if the user has a signed session cookie.
+func isAuthenticated(req *http.Request) bool {
+	if _, err := sessionStore.Get(req, sessionName); err == nil {
+		return true
+	}
+	return false
+}
+
+// ShowIndex show empty page with js scripts
 func ShowIndex(w http.ResponseWriter, r *http.Request) {
 	index, err := Asset("static/index.html")
 	if err != nil {
