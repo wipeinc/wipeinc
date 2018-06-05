@@ -52,11 +52,14 @@ func init() {
 		log.Fatal("twitter consumer secret not set")
 	}
 	if _, err := url.Parse(config.TwitterCallbackURL); err != nil {
-		log.Fatal("invalid twitter callback url : %s", err.Error())
+		log.Fatalf("invalid twitter callback url : %s", err.Error())
 	}
 	sessionSecret := os.Getenv("SESSION_SECRET_KEY")
 	if sessionSecret == "" {
 		log.Fatal("session secret not set")
+	}
+	if len(sessionSecret) != 32 && len(sessionSecret) != 64 {
+		log.Fatalf("invalid session secret size: %d\n", len(sessionSecret))
 	}
 	sessionStore = sessions.NewCookieStore([]byte(sessionSecret), nil)
 
@@ -78,8 +81,9 @@ func main() {
 	mux := mux.NewRouter()
 	mux.Handle("/twitter/login", twitterLogin.LoginHandler(oauth1Config, nil))
 	mux.Handle("/twitter/callback", twitterLogin.CallbackHandler(oauth1Config, issueSession(), nil))
-	mux.HandleFunc("/api/profile/{name}", ShowProfile)
-	mux.PathPrefix("/").HandlerFunc(ShowIndex)
+	mux.HandleFunc("/api/profile/{name}", showProfile)
+	mux.HandleFunc("/api/sessions/logout", logoutHandler)
+	mux.PathPrefix("/").HandlerFunc(showIndex)
 	http.Handle("/", mux)
 	appengine.Main()
 }
@@ -95,6 +99,7 @@ func issueSession() http.Handler {
 		}
 		session, err := sessionStore.New(req, sessionName)
 		if err != nil {
+			log.Printf("Error creating session: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		session.Values[sessionUserKey] = twitterUser.ID
@@ -116,7 +121,14 @@ func logoutHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		delete(session.Values, sessionUserKey)
 		session.Options.MaxAge = -1
-		session.Save(req, w)
+		err = session.Save(req, w)
+		if err != nil {
+			data, errJSON := json.Marshal(session)
+			if errJSON != nil {
+				log.Printf("could not delete session %s\n", data)
+			}
+			log.Printf("could not delete session err: %s\n", err)
+		}
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
@@ -141,8 +153,8 @@ func isAuthenticated(req *http.Request) bool {
 	return false
 }
 
-// ShowIndex show empty page with js scripts
-func ShowIndex(w http.ResponseWriter, r *http.Request) {
+// showIndex show empty page with js scripts
+func showIndex(w http.ResponseWriter, r *http.Request) {
 	index, err := Asset("static/index.html")
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -151,8 +163,8 @@ func ShowIndex(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, indexReader)
 }
 
-// ShowProfile route for /api/profile/{screenName}
-func ShowProfile(w http.ResponseWriter, r *http.Request) {
+// showProfile route for /api/profile/{screenName}
+func showProfile(w http.ResponseWriter, r *http.Request) {
 	if appengine.IsDevAppServer() {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 	}

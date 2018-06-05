@@ -1,8 +1,9 @@
 import 'normalize.css';
 import React from 'react';
-/* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
+/* eslint-disable import/no-extraneous-dependencies */
 import { storiesOf } from '@storybook/react';
-import { Provider } from './Provider';
+/* eslint-enable */
+import Provider from './Provider';
 import user from '../fixtures/sweetlie.json';
 
 import User from '../src/components/User';

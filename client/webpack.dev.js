@@ -9,10 +9,16 @@ module.exports = merge(common, {
   devServer: {
     historyApiFallback: true,
     port: 8082,
+    hot: true,
+    overlay: true,
+    proxy: {
+      '/api': 'http://localhost:8080',
+      '/twitter': 'http://localhost:8080',
+    },
   },
   plugins: [
     new webpack.DefinePlugin({
-      __API_BASE_URL__: JSON.stringify('http://localhost:8080/api'),
+      __API_BASE_URL__: JSON.stringify('/api'),
     }),
   ],
 });
