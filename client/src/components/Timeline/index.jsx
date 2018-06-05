@@ -32,19 +32,20 @@ class Timeline extends React.Component {
 
   render() {
     const {
-      name,
       screenName,
       width,
       height,
       limit,
+      theme,
     } = this.props;
-    const loading = `loading Tweets by ${name}`;
+    const loading = `loading Tweets by ${screenName}`;
     const link = `https://twitter.com/${screenName}`;
     return (
       <a
         ref={node => this.node = node}
         className="twitter-timeline"
         href={link}
+        data-theme={theme}
         data-tweet-limit={limit}
         data-width={width}
         data-height={height}
@@ -57,13 +58,14 @@ class Timeline extends React.Component {
 
 Timeline.propTypes = {
   screenName: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
   width: PropTypes.number,
   height: PropTypes.number,
   limit: PropTypes.number,
+  theme: PropTypes.string,
 };
 
 Timeline.defaultProps = {
+  theme: 'light',
   width: null,
   height: null,
   limit: null,
