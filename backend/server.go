@@ -165,9 +165,6 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 
 // showProfile route for /api/profile/{screenName}
 func showProfile(w http.ResponseWriter, r *http.Request) {
-	if appengine.IsDevAppServer() {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-	}
 	var err error
 	var user *model.User
 
@@ -179,12 +176,12 @@ func showProfile(w http.ResponseWriter, r *http.Request) {
 		appClient := twitter.NewAppClient(ctx)
 		fetchedUser, err := appClient.GetUserShow(params["name"])
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusNotFound)
 		}
 		user = model.NewUser(fetchedUser)
 		err = db.DB.AddUser(user)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 

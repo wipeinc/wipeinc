@@ -18,6 +18,7 @@ const CardContent = styled.div`
   margin-top: 10px;
   padding-top:  10px;
   padding-bottom: 10px;
+  border-radius: 5px;
 `;
 
 const User = ({ user }) => (

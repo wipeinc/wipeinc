@@ -66,7 +66,7 @@ const SignUp = styled(Link)`
   text-align: center;
   vertical-align: middle;
   padding: 0.5rem 1rem;
-  display: ingline-block;
+  display: inline-block;
   border: 1px solid;
   cursor: pointer;
   transition: all .2s ease-in-out;

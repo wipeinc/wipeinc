@@ -48,6 +48,7 @@ const CardHeader = (props) => {
   const Box = styled.div`
     width: 500px;
     min-height: 100px;
+    border-radius: 5px;
     background-image: linear-gradient(
       rgba(0, 0, 0, 0.6),
       rgba(0, 0, 0, 0.6)
