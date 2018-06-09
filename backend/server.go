@@ -9,14 +9,14 @@ import (
 	"net/url"
 	"os"
 
+	oauth1Login "github.com/dghubble/gologin/oauth1"
 	twitterLogin "github.com/dghubble/gologin/twitter"
 	"github.com/dghubble/oauth1"
-	oauth1Login "github.com/dghubble/oauth1"
 	twitterOAuth1 "github.com/dghubble/oauth1/twitter"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
+	"github.com/wipeinc/wipeinc/repository"
 	"github.com/wipeinc/wipeinc/twitter"
 )
 
@@ -76,7 +76,6 @@ func main() {
 	mux.Handle("/twitter/login", twitterLogin.LoginHandler(oauth1Config, nil))
 	mux.Handle("/twitter/callback", twitterLogin.CallbackHandler(oauth1Config, issueSession(), nil))
 	mux.HandleFunc("/api/profile/{name}", showProfile)
-	mux.HandleFunc("/api/myprofile", showMyProfile)
 	mux.HandleFunc("/api/sessions/logout", logoutHandler)
 	mux.PathPrefix("/").HandlerFunc(showIndex)
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -91,7 +90,7 @@ func issueSession() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		accessToken, acessSecret, err := oauth1Login.AccessTokenFromContext(ctx)
+		accessToken, accessTokenSecret, err := oauth1Login.AccessTokenFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -166,14 +165,14 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserTwitterClient(req *http.Request) (*twitter.Client, error) {
-	session, err := sesessionStore.Get(req, sessionName)
+	session, err := sessionStore.Get(req, sessionName)
 	if err != nil {
 		return nil, err
 	}
-	accessToken := session.Values[userAccessTokenKey]
-	accessTokenSecret := session.Values[userAccessTokenSecretKey]
+	accessToken := session.Values[userAccessTokenKey].(string)
+	accessTokenSecret := session.Values[userAcccessTokenSecretKey].(string)
 	ctx := req.Context()
-	client := twitter.NewUserClient(ctx, accessToken, accessTokenSecret)
+	return twitter.NewUserClient(ctx, accessToken, accessTokenSecret), nil
 }
 
 // showProfile route for /api/profile/{screenName}
@@ -184,23 +183,24 @@ func showProfile(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	screenName := params["name"]
 
-	user, err = db.DB.GetUser(screenName)
+	user, err = repository.DB.GetUserByScreenName(screenName)
 	if err != nil {
-		client, err := getUserTwitterClint(req)
+		client, err := getUserTwitterClient(req)
 		if err != nil {
 			http.Error(w, "unauthroized", http.StatusUnauthorized)
 			return
 		}
-		fetchedUser, err := client.GetUserShow(screenName)
+		user, err := client.GetUserShow(screenName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		err = db.DB.AddUser(user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		go func() {
+			err = repository.DB.AddUser(user)
+			if err != nil {
+				log.Printf("Error callling AddUser: %s", err.Error())
+			}
+		}()
 	}
 
 	json.NewEncoder(w).Encode(user)

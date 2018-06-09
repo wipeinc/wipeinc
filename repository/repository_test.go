@@ -26,8 +26,7 @@ var u = &model.User{
 
 func testDB(t *testing.T, db Database) {
 	defer db.Close()
-	var err error
-	err = db.AddUser(u)
+	err := db.AddUser(u)
 	if err != nil {
 		t.Fatalf("error on calling db.AddUser: %s", err.Error())
 	}
@@ -45,7 +44,6 @@ func testDB(t *testing.T, db Database) {
 	}
 
 	// try to fetch the inserted user by ID
-	fetchedUser = nil
 	fetchedUser, err = db.GetUser(u.ID)
 	if err != nil {
 		t.Fatalf("error on calling db.GetUser: %s", err.Error())
