@@ -2,12 +2,11 @@ package twitter
 
 import (
 	"context"
-	"net/http"
+	"log"
 	"os"
-	"strconv"
-	"time"
 
 	twitterGo "github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -16,81 +15,54 @@ type Client struct {
 	client *twitterGo.Client
 }
 
-type Limit struct {
-	Remaining int
-	Limit     int
-	Reset     int64
-}
-
-var credentials *clientcredentials.Config
+var appCredentilsConfig *clientcredentials.Config
+var userCredentialsConfig *oauth1.Config
 var accessToken string
+var consumerKey string
+var consumerSecret string
 
 func init() {
 	accessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
-	credentials = newCredentials()
-}
-
-func (l *Limit) TimeLeft() time.Duration {
-	reset := time.Unix(l.Reset, 0)
-	return reset.Sub(time.Now())
-}
-
-func (l *Limit) Delay() time.Duration {
-	return time.Duration(float64(l.TimeLeft()) / (float64(l.Remaining) + 1))
-}
-
-func GetLimits(resp *http.Response) (*Limit, error) {
-	remainingStr := resp.Header.Get("x-rate-limit-remaining")
-	remaining, err := strconv.Atoi(remainingStr)
-	if err != nil {
-		return nil, err
+	if accessToken == "" {
+		log.Fatal("TWITTER_ACCESS_TOKEN is not set\n")
+	}
+	consumerKey = os.Getenv("TWITTER_CONSUMER_KEY")
+	if consumerKey == "" {
+		log.Fatal("TWITTER_CONSUMER_KEY is not set\n")
+	}
+	consumerSecret = os.Getenv("TWITTER_CONSUMER_SECRET")
+	if consumerSecret == "" {
+		log.Fatal("TWITTER_CONSUMER_SECRET is not set\n")
 	}
 
-	limitStr := resp.Header.Get("x-rate-limit-limit")
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		return nil, err
-	}
-
-	resetStr := resp.Header.Get("x-rate-limit-reset")
-	reset, err := strconv.ParseInt(resetStr, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Limit{
-		Limit:     limit,
-		Remaining: remaining,
-		Reset:     reset,
-	}, nil
-}
-
-func newCredentials() *clientcredentials.Config {
-	return &clientcredentials.Config{
-		ClientID:     os.Getenv("TWITTER_CONSUMER_KEY"),
-		ClientSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
+	appCredentilsConfig = &clientcredentials.Config{
+		ClientID:     consumerKey,
+		ClientSecret: consumerSecret,
 		TokenURL:     "https://api.twitter.com/oauth2/token",
 	}
+
+	userCredentialsConfig = oauth1.NewConfig(consumerKey, consumerSecret)
 }
 
 // NewAppClient create a new Client struct with app credentials
 func NewAppClient(ctx context.Context) *Client {
-	config := newCredentials()
-	httpClient := config.Client(ctx)
+	httpClient := appCredentilsConfig.Client(ctx)
 
 	return &Client{
 		client: twitterGo.NewClient(httpClient),
 	}
 }
 
-// GetUserShow get twitter user info by screenName
-func (c *Client) GetUserShow(screenName string) (*twitterGo.User, error) {
-	userShowParams := &twitterGo.UserShowParams{ScreenName: screenName}
-	user, _, err := c.client.Users.Show(userShowParams)
-	return user, err
+// NewUserClient create a new Client using user credentials
+func NewUserClient(ctx context.Context, accessToken string, accessSecret string) *Client {
+	token := oauth1.NewToken(accessToken, accessSecret)
+	httpClient := userCredentialsConfig.Client(ctx, token)
+	return &Client{
+		client: twitterGo.NewClient(httpClient),
+	}
 }
 
-// GetUserTweetsStats return statistics about user tweets
+// GetUserTimeline return user timeline
 func (c *Client) GetUserTimeline(screenName string, after int64) ([]twitterGo.Tweet, *Limit, error) {
 	params := &twitterGo.UserTimelineParams{
 		ScreenName:      screenName,

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -10,16 +9,15 @@ import (
 	"net/url"
 	"os"
 
-	"cloud.google.com/go/profiler"
 	twitterLogin "github.com/dghubble/gologin/twitter"
 	"github.com/dghubble/oauth1"
+	oauth1Login "github.com/dghubble/oauth1"
 	twitterOAuth1 "github.com/dghubble/oauth1/twitter"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/wipeinc/wipeinc/db"
 	"github.com/wipeinc/wipeinc/model"
 	"github.com/wipeinc/wipeinc/twitter"
-	"google.golang.org/appengine"
 )
 
 // Config struct for backend server
@@ -31,8 +29,10 @@ type Config struct {
 }
 
 const (
-	sessionName    = "wipeinc"
-	sessionUserKey = "twitterID"
+	sessionName               = "wipeinc"
+	sessionUserKey            = "twitterID"
+	userAccessTokenKey        = "twitterAccessToken"
+	userAcccessTokenSecretKey = "twitterAccessTokenSecret"
 )
 
 var sessionStore sessions.Store
@@ -66,12 +66,6 @@ func init() {
 }
 
 func main() {
-	err := profiler.Start(profiler.Config{
-		Service: "wipeinc",
-	})
-	if err != nil {
-		log.Println(err)
-	}
 	oauth1Config := &oauth1.Config{
 		ConsumerKey:    config.TwitterConsumerKey,
 		ConsumerSecret: config.TwitterConsumerSecret,
@@ -82,10 +76,10 @@ func main() {
 	mux.Handle("/twitter/login", twitterLogin.LoginHandler(oauth1Config, nil))
 	mux.Handle("/twitter/callback", twitterLogin.CallbackHandler(oauth1Config, issueSession(), nil))
 	mux.HandleFunc("/api/profile/{name}", showProfile)
+	mux.HandleFunc("/api/myprofile", showMyProfile)
 	mux.HandleFunc("/api/sessions/logout", logoutHandler)
 	mux.PathPrefix("/").HandlerFunc(showIndex)
-	http.Handle("/", mux)
-	appengine.Main()
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
 // issueSession issues a cookie session after successful Twitter login
@@ -97,17 +91,25 @@ func issueSession() http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		accessToken, acessSecret, err := oauth1Login.AccessTokenFromContext(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		session, err := sessionStore.New(req, sessionName)
 		if err != nil {
-			log.Printf("Error creating session: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		session.Values[sessionUserKey] = twitterUser.ID
+		session.Values[userAccessTokenKey] = accessToken
+		session.Values[userAcccessTokenSecretKey] = accessTokenSecret
 		err = session.Save(req, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		http.Redirect(w, req, "/profile", http.StatusFound)
+		http.Redirect(w, req, "/", http.StatusFound)
 	}
 	return http.HandlerFunc(fn)
 }
@@ -163,25 +165,41 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, indexReader)
 }
 
+func getUserTwitterClient(req *http.Request) (*twitter.Client, error) {
+	session, err := sesessionStore.Get(req, sessionName)
+	if err != nil {
+		return nil, err
+	}
+	accessToken := session.Values[userAccessTokenKey]
+	accessTokenSecret := session.Values[userAccessTokenSecretKey]
+	ctx := req.Context()
+	client := twitter.NewUserClient(ctx, accessToken, accessTokenSecret)
+}
+
 // showProfile route for /api/profile/{screenName}
-func showProfile(w http.ResponseWriter, r *http.Request) {
+func showProfile(w http.ResponseWriter, req *http.Request) {
 	var err error
 	var user *model.User
 
-	params := mux.Vars(r)
+	params := mux.Vars(req)
+	screenName := params["name"]
 
-	user, err = db.DB.GetUser(params["name"])
+	user, err = db.DB.GetUser(screenName)
 	if err != nil {
-		ctx := context.Background()
-		appClient := twitter.NewAppClient(ctx)
-		fetchedUser, err := appClient.GetUserShow(params["name"])
+		client, err := getUserTwitterClint(req)
+		if err != nil {
+			http.Error(w, "unauthroized", http.StatusUnauthorized)
+			return
+		}
+		fetchedUser, err := client.GetUserShow(screenName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
 		}
-		user = model.NewUser(fetchedUser)
 		err = db.DB.AddUser(user)
 		if err != nil {
-			log.Fatal(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 
