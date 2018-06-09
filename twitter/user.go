@@ -55,6 +55,7 @@ func NewUser(user *twitterGo.User) (*model.User, error) {
 		Name:                 user.Name,
 		ProfileBannerURL:     user.ProfileBannerURL,
 		ProfileImageURLHTTPS: user.ProfileImageURLHttps,
+		ScreenName:           user.ScreenName,
 		StatusesCount:        user.StatusesCount,
 		UpdatedAt:            updatedAt,
 		URL:                  user.URL,

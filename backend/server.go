@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -29,14 +30,13 @@ type Config struct {
 }
 
 const (
-	sessionName               = "wipeinc"
-	sessionUserKey            = "twitterID"
-	userAccessTokenKey        = "twitterAccessToken"
-	userAcccessTokenSecretKey = "twitterAccessTokenSecret"
+	sessionName              = "wipeinc"
+	sessionUserKey           = "twitterID"
+	userAccessTokenKey       = "twitterAccessToken"
+	userAccessTokenSecretKey = "twitterAccessTokenSecret"
 )
 
 var sessionStore sessions.Store
-var sessionSecret string
 var config *Config
 
 func init() {
@@ -102,7 +102,7 @@ func issueSession() http.Handler {
 		}
 		session.Values[sessionUserKey] = twitterUser.ID
 		session.Values[userAccessTokenKey] = accessToken
-		session.Values[userAcccessTokenSecretKey] = accessTokenSecret
+		session.Values[userAccessTokenSecretKey] = accessTokenSecret
 		err = session.Save(req, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -134,26 +134,6 @@ func logoutHandler(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 
-// requireLogin redirects unauthenticated users to the login route.
-func requireLogin(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, req *http.Request) {
-		if !isAuthenticated(req) {
-			http.Redirect(w, req, "/", http.StatusFound)
-			return
-		}
-		next.ServeHTTP(w, req)
-	}
-	return http.HandlerFunc(fn)
-}
-
-// isAuthenticated returns true if the user has a signed session cookie.
-func isAuthenticated(req *http.Request) bool {
-	if _, err := sessionStore.Get(req, sessionName); err == nil {
-		return true
-	}
-	return false
-}
-
 // showIndex show empty page with js scripts
 func showIndex(w http.ResponseWriter, r *http.Request) {
 	index, err := Asset("static/index.html")
@@ -161,7 +141,9 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}
 	indexReader := bytes.NewBuffer(index)
-	io.Copy(w, indexReader)
+	if _, err := io.Copy(w, indexReader); err != nil {
+		log.Printf("error writing index to http connection: %s\n", err)
+	}
 }
 
 func getUserTwitterClient(req *http.Request) (*twitter.Client, error) {
@@ -169,8 +151,18 @@ func getUserTwitterClient(req *http.Request) (*twitter.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	accessToken := session.Values[userAccessTokenKey].(string)
-	accessTokenSecret := session.Values[userAcccessTokenSecretKey].(string)
+	var accessToken string
+	var accessTokenSecret string
+	var ok bool
+
+	val := session.Values[userAccessTokenKey]
+	if accessToken, ok = val.(string); !ok {
+		return nil, errors.New("user token key absent")
+	}
+	val = session.Values[userAccessTokenSecretKey]
+	if accessTokenSecret, ok = val.(string); !ok {
+		return nil, errors.New("user token key secret absent")
+	}
 	ctx := req.Context()
 	return twitter.NewUserClient(ctx, accessToken, accessTokenSecret), nil
 }
@@ -184,24 +176,32 @@ func showProfile(w http.ResponseWriter, req *http.Request) {
 	screenName := params["name"]
 
 	user, err = repository.DB.GetUserByScreenName(screenName)
+	if err == nil {
+		log.Println("cache hit")
+	}
 	if err != nil {
-		client, err := getUserTwitterClient(req)
+		var client *twitter.Client
+		client, err = getUserTwitterClient(req)
 		if err != nil {
 			http.Error(w, "unauthroized", http.StatusUnauthorized)
 			return
 		}
-		user, err := client.GetUserShow(screenName)
+		user, err = client.GetUserShow(screenName)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		go func() {
-			err = repository.DB.AddUser(user)
-			if err != nil {
-				log.Printf("Error callling AddUser: %s", err.Error())
-			}
-		}()
+		go saveUser(*user)
 	}
 
-	json.NewEncoder(w).Encode(user)
+	if err = json.NewEncoder(w).Encode(user); err != nil {
+		log.Printf("error trying to serialize twitter user profile: %s", err.Error())
+	}
+}
+
+func saveUser(user model.User) {
+	err := repository.DB.AddUser(&user)
+	if err != nil {
+		log.Printf("Error callling AddUser: %s", err.Error())
+	}
 }
