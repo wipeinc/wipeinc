@@ -4,11 +4,15 @@ import (
 	"time"
 
 	twitterGo "github.com/dghubble/go-twitter/twitter"
-	"github.com/wipeinc/wipeinc/model"
+	"github.com/wipeinc/wipeinc/entity"
 )
 
+func parseDate(date string) (time.Time, error) {
+	return time.Parse(time.RubyDate, date)
+}
+
 // GetUserShow get twitter user info by screenName
-func (c *Client) GetUserShow(screenName string) (*model.User, error) {
+func (c *Client) GetUserShow(screenName string) (*entity.User, error) {
 	userShowParams := &twitterGo.UserShowParams{ScreenName: screenName}
 	rawUser, _, err := c.client.Users.Show(userShowParams)
 	user, err := NewUser(rawUser)
@@ -19,7 +23,7 @@ func (c *Client) GetUserShow(screenName string) (*model.User, error) {
 }
 
 // UserLookup lookup for users using IDs
-func (c *Client) UserLookup(userID []int64) ([]model.User, *Limit, error) {
+func (c *Client) UserLookup(userID []int64) ([]entity.User, *Limit, error) {
 	params := &twitterGo.UserLookupParams{
 		UserID: userID,
 	}
@@ -28,7 +32,7 @@ func (c *Client) UserLookup(userID []int64) ([]model.User, *Limit, error) {
 		return nil, nil, err
 	}
 	limits, err := GetLimits(resp)
-	users := make([]model.User, 0, len(rawUsers))
+	users := make([]entity.User, 0, len(rawUsers))
 	for _, rawUser := range rawUsers {
 		user, err := NewUser(&rawUser)
 		if err != nil {
@@ -40,13 +44,14 @@ func (c *Client) UserLookup(userID []int64) ([]model.User, *Limit, error) {
 }
 
 // NewUser create a new user from anaconda twitter struct
-func NewUser(user *twitterGo.User) (*model.User, error) {
-	createdAt, err := time.Parse(time.RubyDate, user.CreatedAt)
+func NewUser(user *twitterGo.User) (*entity.User, error) {
+	createdAt, err := parseDate(user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 	updatedAt := time.Now().Round(time.Microsecond).UTC()
-	return &model.User{
+	return &entity.User{
+		ID:                   user.ID,
 		CreatedAt:            createdAt,
 		Description:          user.Description,
 		FavouritesCount:      user.FavouritesCount,

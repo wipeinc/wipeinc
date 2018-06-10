@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -76,6 +77,7 @@ func main() {
 	mux.Handle("/twitter/login", twitterLogin.LoginHandler(oauth1Config, nil))
 	mux.Handle("/twitter/callback", twitterLogin.CallbackHandler(oauth1Config, issueSession(), nil))
 	mux.HandleFunc("/api/profile/{name}", showProfile)
+	mux.HandleFunc("/api/profile/{name}/analyze", showProfile)
 	mux.HandleFunc("/api/sessions/logout", logoutHandler)
 	mux.PathPrefix("/").HandlerFunc(showIndex)
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -199,9 +201,37 @@ func showProfile(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// analyzeProfile route for /api/profile/{screenName}/analyze
+func analyzeProfile(w http.ResponseWriter, req *http.Request) {
+	client, err := getUserTwitterClient(req)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	stats := twitter.NewTweetStats()
+	for i := 0; i < 4; i++ {
+		fmt.Printf("[%d/4]fetching user since: %d\n", i+1, since)
+		tweets, limit, err := client.GetUserTimeline(user, since)
+		if err != nil {
+			fmt.Println("error")
+			fmt.Printf("%+v\n", err)
+			break
+		}
+		stats.AnalyzeTweets(tweets)
+		if len(tweets) < 199 {
+			fmt.Printf("got %d tweets\n", len(tweets))
+			break
+		}
+		since = tweets[len(tweets)-1].ID
+		limit.Delay()
+	}
+
+}
+
 func saveUser(user model.User) {
 	err := repository.DB.AddUser(&user)
 	if err != nil {
 		log.Printf("Error callling AddUser: %s", err.Error())
 	}
+
 }
