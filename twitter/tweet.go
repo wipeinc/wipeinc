@@ -16,9 +16,32 @@ func NewTweet(apiTweet twitterGo.Tweet) (*entity.Tweet, error) {
 		CreatedAt:     createdAt,
 		FavoriteCount: apiTweet.FavoriteCount,
 		FullText:      apiTweet.FullText,
+		Lang:          apiTweet.Lang,
 		RetweetCount:  apiTweet.RetweetCount,
 		Text:          apiTweet.Text,
+		Truncated:     apiTweet.Truncated,
 	}
+	tweet.User, err = NewUser(apiTweet.User)
+	if err != nil {
+		return nil, err
+	}
+
+	if apiTweet.RetweetedStatus != nil {
+		retweetedStatus, err := NewTweet(*apiTweet.RetweetedStatus)
+		if err != nil {
+			return nil, err
+		}
+		tweet.RetweetedStatus = retweetedStatus
+	}
+
+	if apiTweet.QuotedStatus != nil {
+		quoteTweet, err := NewTweet(*apiTweet.QuotedStatus)
+		if err != nil {
+			return nil, err
+		}
+		tweet.QuotedStatus = quoteTweet
+	}
+
 	if apiTweet.Entities != nil {
 		entities := apiTweet.Entities
 		tweet.Hashtags = make([]string, 0, len(entities.Hashtags))
@@ -38,11 +61,6 @@ func NewTweet(apiTweet twitterGo.Tweet) (*entity.Tweet, error) {
 		for _, urlEntity := range entities.Urls {
 			tweet.URLS = append(tweet.URLS, urlEntity.ExpandedURL)
 		}
-	}
-
-	tweet.User, err = NewUser(apiTweet.User)
-	if err != nil {
-		return nil, err
 	}
 
 	return tweet, nil

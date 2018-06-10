@@ -75,7 +75,7 @@ var tweetWithMentionTests = []struct {
 			tweetWithMention(1),
 			tweetWithMention(2),
 			tweetWithMention(2),
-			tweetWithMention(2),
+			tweetWithMention(3),
 			entity.Tweet{},
 		},
 		[]twitter.Freq{
@@ -96,9 +96,9 @@ var tweetWithMentionTests = []struct {
 			entity.Tweet{},
 		},
 		[]twitter.Freq{
-			twitter.Freq{Value: 1, F: 3},
-			twitter.Freq{Value: 2, F: 2},
-			twitter.Freq{Value: 3, F: 1},
+			twitter.Freq{Value: "1", F: 3},
+			twitter.Freq{Value: "2", F: 2},
+			twitter.Freq{Value: "3", F: 1},
 		},
 	},
 	{
@@ -114,8 +114,8 @@ var tweetWithMentionTests = []struct {
 			entity.Tweet{},
 		},
 		[]twitter.Freq{
-			twitter.Freq{Value: 1, F: 3},
-			twitter.Freq{Value: 2, F: 2},
+			twitter.Freq{Value: "1", F: 3},
+			twitter.Freq{Value: "2", F: 2},
 		},
 	},
 }
@@ -154,9 +154,9 @@ func TestAnalyzeTweetsIntegration(t *testing.T) {
 	stats.AnalyzeTweets(timeline)
 
 	const mostPopularTweetID = 997850510219620353
-	if len(stats.MostPopularTweets) != 20 {
+	if len(stats.MostPopularTweets) != twitter.MostPopularTweetsLen {
 		t.Errorf("expected %d Most popular tweets got %d\n",
-			20, len(stats.MostPopularTweets))
+			twitter.MostPopularTweetsLen, len(stats.MostPopularTweets))
 	}
 
 	if stats.MostPopularTweets[0].ID != mostPopularTweetID {

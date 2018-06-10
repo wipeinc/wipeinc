@@ -14,7 +14,9 @@ const topHashtagsLen = 10
 const topMentionsLen = 10
 const topDomainsLen = 10
 const topRetweetsLen = 10
-const mostPopularTweetsLen = 5
+
+// MostPopularTweetsLen is default Maximum size for most popular tweets
+const MostPopularTweetsLen = 5
 
 // Freq is the structure for sorting
 type Freq struct {
@@ -45,7 +47,7 @@ func isBlacklisted(domain string) bool {
 // NewTweetStats Create a New TweetStats struct
 func NewTweetStats() *TweetStats {
 	return &TweetStats{
-		MostPopularTweets: make([]entity.Tweet, mostPopularTweetsLen),
+		MostPopularTweets: make([]entity.Tweet, MostPopularTweetsLen),
 		hashtagsCount:     make(map[string]int),
 		mentionsCount:     make(map[string]int),
 		domainsCount:      make(map[string]int),
@@ -129,8 +131,8 @@ func (s *TweetStats) updateMostPopularTweets(tweet entity.Tweet) {
 		return s.MostPopularTweets[i].PopularityScore() < score
 	})
 
-	if index < mostPopularTweetsLen {
-		copy(s.MostPopularTweets[index+1:], s.MostPopularTweets[index:mostPopularTweetsLen-1])
+	if index < MostPopularTweetsLen {
+		copy(s.MostPopularTweets[index+1:], s.MostPopularTweets[index:MostPopularTweetsLen-1])
 		s.MostPopularTweets[index] = tweet
 	}
 }
