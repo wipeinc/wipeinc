@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -19,4 +20,9 @@ type User struct {
 	StatusesCount        int       `json:"statuses_count"`
 	UpdatedAt            time.Time `json:"updatedAt"`
 	URL                  string    `json:"url"`
+}
+
+// IDStr is string version of the User ID
+func (u *User) IDStr() string {
+	return strconv.FormatInt(u.ID, 10)
 }

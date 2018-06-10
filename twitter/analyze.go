@@ -6,7 +6,7 @@ import (
 
 	"log"
 
-	twitterGo "github.com/dghubble/go-twitter/twitter"
+	"github.com/wipeinc/wipeinc/entity"
 )
 
 const favoriteRetweetRatio = 9
@@ -18,13 +18,13 @@ const mostPopularTweetsLen = 5
 
 // Freq is the structure for sorting
 type Freq struct {
-	Value string
+	Value interface{}
 	F     int
 }
 
 // TweetStats struct returned for twitter statistic anlytics
 type TweetStats struct {
-	MostPopularTweets []twitterGo.Tweet
+	MostPopularTweets []entity.Tweet
 	mentionsCount     map[string]int
 	retweetsCount     map[string]int
 	domainsCount      map[string]int
@@ -42,14 +42,10 @@ func isBlacklisted(domain string) bool {
 	return c
 }
 
-func tweetPopularityScore(tweet twitterGo.Tweet) int {
-	return tweet.FavoriteCount + tweet.RetweetCount*favoriteRetweetRatio
-}
-
 // NewTweetStats Create a New TweetStats struct
 func NewTweetStats() *TweetStats {
 	return &TweetStats{
-		MostPopularTweets: make([]twitterGo.Tweet, mostPopularTweetsLen),
+		MostPopularTweets: make([]entity.Tweet, mostPopularTweetsLen),
 		hashtagsCount:     make(map[string]int),
 		mentionsCount:     make(map[string]int),
 		domainsCount:      make(map[string]int),
@@ -58,7 +54,7 @@ func NewTweetStats() *TweetStats {
 }
 
 // AnalyzeTweets return a TweetStats structure of the analyzed tweets
-func (s *TweetStats) AnalyzeTweets(tweets []twitterGo.Tweet) {
+func (s *TweetStats) AnalyzeTweets(tweets []entity.Tweet) {
 	for _, tweet := range tweets {
 		s.AnalyzeTweet(tweet)
 	}
@@ -96,7 +92,16 @@ func (s *TweetStats) TopRetweets(len int) []Freq {
 	return top(s.retweetsCount, len)
 }
 
-func top(elements map[string]int, len int) []Freq {
+// Min return the Min between to integer
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func top(elements map[string]int, maxLen int) []Freq {
+	len := Min(len(elements), maxLen)
 	top := make([]Freq, len)
 	for value, count := range elements {
 		insert := Freq{Value: value, F: count}
@@ -118,10 +123,10 @@ func top(elements map[string]int, len int) []Freq {
 	return top
 }
 
-func (s *TweetStats) updateMostPopularTweets(tweet twitterGo.Tweet) {
-	score := tweetPopularityScore(tweet)
+func (s *TweetStats) updateMostPopularTweets(tweet entity.Tweet) {
+	score := tweet.PopularityScore()
 	index := sort.Search(len(s.MostPopularTweets), func(i int) bool {
-		return tweetPopularityScore(s.MostPopularTweets[i]) < score
+		return s.MostPopularTweets[i].PopularityScore() < score
 	})
 
 	if index < mostPopularTweetsLen {
@@ -131,31 +136,29 @@ func (s *TweetStats) updateMostPopularTweets(tweet twitterGo.Tweet) {
 }
 
 // AnalyzeTweet Analyze a single Tweet for statistics
-func (s *TweetStats) AnalyzeTweet(tweet twitterGo.Tweet) {
+func (s *TweetStats) AnalyzeTweet(tweet entity.Tweet) {
 	if tweet.RetweetedStatus == nil {
 		s.updateMostPopularTweets(tweet)
 	} else if tweet.User.ID != tweet.RetweetedStatus.User.ID {
-		s.retweetsCount[tweet.RetweetedStatus.User.IDStr]++
+		s.retweetsCount[tweet.RetweetedStatus.User.IDStr()]++
 	}
-	if tweet.Entities != nil {
-		for _, hashtag := range tweet.Entities.Hashtags {
-			s.hashtagsCount[hashtag.Text]++
+	for _, hashtag := range tweet.Hashtags {
+		s.hashtagsCount[hashtag]++
+	}
+	for _, mention := range tweet.UserMentions {
+		if mention.ID != tweet.User.ID {
+			s.mentionsCount[mention.IDStr()]++
 		}
-		for _, mention := range tweet.Entities.UserMentions {
-			if mention.ID != tweet.User.ID {
-				s.mentionsCount[mention.IDStr]++
-			}
-		}
+	}
 
-		for _, urlEntity := range tweet.Entities.Urls {
-			u, err := url.Parse(urlEntity.ExpandedURL)
-			if err == nil {
-				if !isBlacklisted(u.Hostname()) {
-					s.domainsCount[u.Hostname()]++
-				}
-			} else {
-				log.Printf("failed to parse url: %s\n", urlEntity.ExpandedURL)
+	for _, sURL := range tweet.URLS {
+		u, err := url.Parse(sURL)
+		if err == nil {
+			if !isBlacklisted(u.Hostname()) {
+				s.domainsCount[u.Hostname()]++
 			}
+		} else {
+			log.Printf("failed to parse url: %s\n", sURL)
 		}
 	}
 }

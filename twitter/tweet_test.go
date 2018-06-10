@@ -3,7 +3,6 @@ package twitter_test
 import (
 	"testing"
 
-	"github.com/sanity-io/litter"
 	"github.com/wipeinc/wipeinc/twitter"
 )
 
@@ -15,6 +14,8 @@ func TestNewTweet(t *testing.T) {
 				name,
 				err.Error())
 		}
-		litter.Dump(tweet)
+		if tweet.User == nil || tweet.User.ID == 0 {
+			t.Fatalf("tweet User is invalid NewTweet(%s)", name)
+		}
 	}
 }
